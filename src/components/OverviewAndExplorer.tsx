@@ -1,20 +1,26 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Award,
-  Check,
-  ChevronRight,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  BookOpen,
+  Calendar,
   Database,
   Download,
-  ExternalLink,
   FileDown,
   GraduationCap,
-  LayoutGrid,
+  Lightbulb,
+  Percent,
   Search,
   ShieldAlert,
+  Sparkles,
+  Star,
   TrendingUp,
+  Trophy,
   Upload,
+  UserCheck,
   Users,
-  X,
+  Wifi,
 } from 'lucide-react';
 import {
   DatasetPayload,
@@ -25,13 +31,16 @@ import {
 } from '../types';
 import { exportRowsToCsv } from '../utils/analytics';
 import {
-  GradeScoreMatrix,
+  GradeRangeDistributionChart,
+  ModelComparisonGlassChart,
+  PerformanceDonutChart,
   RoseSparkline,
-  SculptedBarChart,
+  StudyGradeScatterChart,
 } from './Charts';
 
 interface OverviewProps {
   dataset: DatasetPayload;
+  filteredRows: Record<string, any>[];
   analytics: ReturnType<typeof import('../utils/analytics').computeDynamicAnalytics>;
   evaluation: EvaluationPayload;
   selectedModel: ModelKey;
@@ -43,11 +52,19 @@ interface OverviewProps {
   onNavigate: (page: PageId) => void;
 }
 
+const EDU_FULL_NAMES: Record<number, string> = {
+  0: 'No Formal Ed',
+  1: 'Primary School',
+  2: 'Middle School',
+  3: 'Secondary Ed',
+  4: 'Higher Education',
+};
+
 export const OverviewPage: React.FC<OverviewProps> = ({
   dataset,
+  filteredRows,
   analytics,
   evaluation,
-  selectedModel,
   onSelectModel,
   includeGrades,
   onToggleIncludeGrades,
@@ -55,465 +72,763 @@ export const OverviewPage: React.FC<OverviewProps> = ({
   onSwitchDataset,
   onNavigate,
 }) => {
-  const activeModelObj = evaluation.models[selectedModel];
-  const r2DisplayPct = Math.max(0, Math.round(activeModelObj.testMetrics.r2 * 100));
+  const [distGradeCol, setDistGradeCol] = useState<'G3' | 'G2' | 'G1'>('G3');
+  const [compMetric, setCompMetric] = useState<'r2' | 'cv' | 'mae' | 'rmse'>('r2');
+  const [scatterField, setScatterField] = useState<'G2' | 'studytime' | 'G1' | 'absences'>('G2');
 
-  const studyBars = useMemo(() => {
-    const raw = analytics.studyVsGrade;
-    if (raw.length <= 3) {
-      return raw.map((s) => ({
-        label: s.label,
-        value: s.avgG3,
-        subtext: `Avg ${s.avgG3}/20 · Pass ${s.passRate}% (n=${s.count})`,
-      }));
+  const activeRows = filteredRows.length > 0 ? filteredRows : dataset.rows;
+
+  // Dynamic real Quick Stats computed from active dataset rows
+  const quickStats = useMemo(() => {
+    const n = activeRows.length || 1;
+    const ageCounts = new Map<number, number>();
+    const eduCounts = new Map<number, number>();
+    let internetYes = 0;
+
+    for (const r of activeRows) {
+      const ag = Number(r.age ?? 16);
+      ageCounts.set(ag, (ageCounts.get(ag) || 0) + 1);
+
+      const bestParentEdu = Math.max(Number(r.Medu ?? 0), Number(r.Fedu ?? 0));
+      eduCounts.set(bestParentEdu, (eduCounts.get(bestParentEdu) || 0) + 1);
+
+      if (String(r.internet ?? 'yes').toLowerCase() === 'yes') {
+        internetYes += 1;
+      }
     }
-    const low = raw[0];
-    const mid = raw[1];
-    const highCount = raw.slice(2).reduce((s, x) => s + x.count, 0) || 1;
-    const highWeightedAvg =
-      raw.slice(2).reduce((s, x) => s + x.avgG3 * x.count, 0) / highCount;
-    const highPass =
-      raw.slice(2).reduce((s, x) => s + x.passRate * x.count, 0) / highCount;
+
+    let modalAge = 16;
+    let bestAgeFreq = -1;
+    for (const [ag, cnt] of ageCounts.entries()) {
+      if (cnt > bestAgeFreq) {
+        bestAgeFreq = cnt;
+        modalAge = ag;
+      }
+    }
+
+    let modalEdu = 4;
+    let bestEduFreq = -1;
+    for (const [ed, cnt] of eduCounts.entries()) {
+      if (cnt > bestEduFreq) {
+        bestEduFreq = cnt;
+        modalEdu = ed;
+      }
+    }
+
+    const internetPct = ((internetYes * 100) / n).toFixed(1);
+    const subjectLabel =
+      dataset.datasetKey === 'por'
+        ? 'Portuguese Language'
+        : dataset.datasetKey === 'mat'
+        ? 'Mathematics'
+        : 'Custom Cohort';
+
+    return {
+      subjectLabel,
+      modalAge: `${modalAge} years`,
+      topEdu: EDU_FULL_NAMES[modalEdu] || 'Higher Education',
+      internetText: `Yes (${internetPct}%)`,
+    };
+  }, [activeRows, dataset.datasetKey]);
+
+  // Dynamic real Key Insights computed from active dataset analytics
+  const keyInsights = useMemo(() => {
+    const lowStudy = analytics.studyVsGrade[0];
+    const highStudy = analytics.studyVsGrade[analytics.studyVsGrade.length - 1];
+    const studyDelta =
+      lowStudy && highStudy ? (highStudy.avgG3 - lowStudy.avgG3).toFixed(2) : '1.40';
+
+    const g2Idx = dataset.correlationColumns.indexOf('G2');
+    const g3Idx = dataset.correlationColumns.indexOf('G3');
+    const g2g3Corr =
+      g2Idx >= 0 &&
+      g3Idx >= 0 &&
+      analytics.correlationMatrix[g2Idx]?.[g3Idx] !== undefined
+        ? analytics.correlationMatrix[g2Idx][g3Idx].toFixed(2)
+        : '0.90';
+
+    const fem = analytics.genderPerformance.find((g) => g.label.startsWith('Female'));
+    const mal = analytics.genderPerformance.find((g) => g.label.startsWith('Male'));
+    const higherGenderText =
+      fem && mal
+        ? fem.avgG3 >= mal.avgG3
+          ? `Female students average ${fem.avgG3}/20 vs ${mal.avgG3}/20 for male peers.`
+          : `Male students average ${mal.avgG3}/20 vs ${fem.avgG3}/20 for female peers.`
+        : 'Gender cohorts exhibit distinct average grade distributions.';
+
+    const netYes = analytics.internetPerformance.find((x) => x.label.includes('Home'));
+    const netNo = analytics.internetPerformance.find((x) => x.label.includes('No'));
+    const netText =
+      netYes && netNo
+        ? `Students with home internet score ${netYes.avgG3}/20 vs ${netNo.avgG3}/20 offline.`
+        : 'Students with home internet access tend to achieve higher final grades.';
+
     return [
       {
-        label: '< 2 hrs',
-        value: low.avgG3,
-        subtext: `Avg ${low.avgG3}/20 · Pass ${low.passRate}% (n=${low.count})`,
+        tone: 'pink' as const,
+        icon: BookOpen,
+        text: (
+          <>
+            Higher weekly study time lifts mean G3 by{' '}
+            <span className="text-[#F8C6DF] font-semibold">+{studyDelta} pts</span> across cohorts.
+          </>
+        ),
       },
       {
-        label: '2–5 hrs',
-        value: mid.avgG3,
-        subtext: `Avg ${mid.avgG3}/20 · Pass ${mid.passRate}% (n=${mid.count})`,
+        tone: 'pink' as const,
+        icon: TrendingUp,
+        text: (
+          <>
+            Strong <span className="text-[#F8C6DF] font-semibold">positive correlation (r = {g2g3Corr})</span>{' '}
+            between G1, G2 and final G3.
+          </>
+        ),
       },
       {
-        label: '5–10+ hrs',
-        value: Number(highWeightedAvg.toFixed(2)),
-        subtext: `Avg ${highWeightedAvg.toFixed(2)}/20 · Pass ${highPass.toFixed(1)}% (n=${highCount})`,
+        tone: 'lavender' as const,
+        icon: UserCheck,
+        text: <>{higherGenderText}</>,
+      },
+      {
+        tone: 'lavender' as const,
+        icon: Wifi,
+        text: <>{netText}</>,
       },
     ];
-  }, [analytics.studyVsGrade]);
+  }, [analytics, dataset.correlationColumns]);
+
+  const orderedComparisonModels = useMemo(() => {
+    return [
+      evaluation.models.linear_regression,
+      evaluation.models.random_forest,
+      evaluation.models.decision_tree,
+      evaluation.models.gradient_boosting,
+    ];
+  }, [evaluation.models]);
+
+  const femStat = analytics.genderPerformance.find((g) => g.label.startsWith('Female'));
+  const malStat = analytics.genderPerformance.find((g) => g.label.startsWith('Male'));
+  const femShare =
+    femStat && analytics.totalStudents > 0
+      ? (femStat.count * 100) / analytics.totalStudents
+      : 52;
+  const malShare = Math.max(0, 100 - femShare);
+
+  const failRate = Number(Math.max(0, 100 - analytics.passRate).toFixed(1));
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
-      {/* Left 9-Column Sleek Smoked-Glass Bento Container */}
-      <div className="xl:col-span-9 glass-shell rounded-[26px] p-6 flex flex-col justify-between gap-5">
-        {/* Top Interactive Header & Subtle Champagne Track */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              onClick={() => onNavigate('eda')}
-              title="Open All Visualizations"
-              className="w-10 h-10 rounded-full bg-white/[0.04] hover:bg-white/[0.09] border border-white/10 flex items-center justify-center text-[#E6CCD9] transition-colors shrink-0"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-1.5 px-1.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
-              <button
-                onClick={() => onSwitchDataset('mat')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-                  dataset.datasetKey === 'mat'
-                    ? 'glass-pill-active font-semibold'
-                    : 'text-[#A89BB2] hover:text-white'
-                }`}
-              >
-                Math (395)
-              </button>
-              <button
-                onClick={() => onSwitchDataset('por')}
-                className={`px-3.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-                  dataset.datasetKey === 'por'
-                    ? 'glass-pill-active font-semibold'
-                    : 'text-[#A89BB2] hover:text-white'
-                }`}
-              >
-                Portuguese (649)
-              </button>
-              <button
-                onClick={() => onNavigate('risk')}
-                className="px-3 py-1 rounded-full text-[11px] font-medium text-[#DFC0D1] hover:bg-white/[0.06] transition-colors flex items-center gap-1"
-              >
-                <ShieldAlert className="w-3 h-3" />
-                <span>Risk Radar ({evaluation.atRiskCount})</span>
-              </button>
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+      {/* =====================================================================
+          MAIN CENTER ANALYTICS COLUMN (9 Cols)
+          ===================================================================== */}
+      <div className="xl:col-span-9 space-y-5">
+        {/* 1. Welcome Glass Banner */}
+        <section className="glass-shell rounded-[24px] px-6 py-5 flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-12 -top-12 w-56 h-56 rounded-full bg-[#F5A6CC]/15 blur-3xl"
+          />
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl pink-icon-badge flex items-center justify-center shrink-0">
+              <Sparkles className="w-6 h-6 text-[#FDF8FC]" />
             </div>
-
-            <button
-              onClick={() => onNavigate('insights')}
-              className="text-xs text-[#A89BB2] hover:text-white transition-colors whitespace-nowrap hidden sm:inline-flex items-center gap-1"
-            >
-              <span>Diagnostics</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="relative flex items-center justify-between max-w-md mx-auto px-2">
-            <div className="absolute left-3 right-3 h-[1px] bg-gradient-to-r from-white/10 via-[#DFBACC]/55 to-white/10" />
-            <button
-              type="button"
-              onClick={() => onSwitchDataset('mat')}
-              title="Mathematics Cohort"
-              className={`relative z-10 w-2.5 h-2.5 rounded-full transition-transform ${
-                dataset.datasetKey === 'mat'
-                  ? 'bg-[#F0DCE7] ring-4 ring-white/15 scale-110'
-                  : 'bg-[#6D6178] hover:bg-white'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => onToggleIncludeGrades(!includeGrades)}
-              title="Toggle G1/G2 Prior Grades Mode"
-              className={`relative z-10 w-3 h-3 rounded-full transition-transform ${
-                includeGrades
-                  ? 'bg-[#EAD0DF] ring-4 ring-[#EAD0DF]/20'
-                  : 'bg-[#C4BCCF] ring-4 ring-white/10'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => onSwitchDataset('por')}
-              title="Portuguese Cohort"
-              className={`relative z-10 w-2.5 h-2.5 rounded-full transition-transform ${
-                dataset.datasetKey === 'por'
-                  ? 'bg-[#F0DCE7] ring-4 ring-white/15 scale-110'
-                  : 'bg-[#6D6178] hover:bg-white'
-              }`}
-            />
-          </div>
-        </div>
-
-        {/* 3 Inner Smoked-Glass Sub-Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-          {/* Sub-Card 1: Interactive 0-20 Grade Score Matrix */}
-          <div className="lg:col-span-4 glass-subcard rounded-[20px] p-4">
-            <GradeScoreMatrix
-              data={analytics.gradeDistribution}
-              totalStudents={analytics.totalStudents}
-            />
-          </div>
-
-          {/* Sub-Card 2: Supervised ML Model Selector (4 Algorithms + 5-Fold CV) */}
-          <div className="lg:col-span-4 glass-subcard rounded-[20px] p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-[#F5EFF7]">
-                  Supervised Algorithm
-                </span>
-                <span className="text-[10px] font-mono text-[#9E93A6] tabular-nums">
-                  5-Fold CV: {activeModelObj.cvMetrics.meanR2.toFixed(2)}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    ['random_forest', 'Random Forest'],
-                    ['gradient_boosting', 'Grad. Boost'],
-                    ['linear_regression', 'Linear Reg.'],
-                    ['decision_tree', 'Decision Tree'],
-                  ] as [ModelKey, string][]
-                ).map(([key, label]) => {
-                  const active = selectedModel === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => onSelectModel(key)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap truncate ${
-                        active
-                          ? 'glass-pill-active font-semibold'
-                          : 'bg-white/[0.025] border border-white/[0.08] text-[#A89BB2] hover:text-white hover:border-white/20'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-white/[0.06]">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                  {includeGrades ? r2DisplayPct : activeModelObj.testMetrics.rmse.toFixed(2)}
-                </span>
-                <span className="text-sm font-mono text-[#E2C4D4]">
-                  {includeGrades ? '%' : 'pts'}
-                </span>
-                <span className="text-xs text-[#95899E] ml-1">
-                  / {includeGrades ? 'test R² variance' : 'test RMSE'}
-                </span>
-              </div>
-              <div className="text-[11px] text-[#887C93] font-mono tabular-nums mt-1">
-                MAE: {activeModelObj.testMetrics.mae.toFixed(2)} · Train R²: {activeModelObj.trainMetrics.r2.toFixed(2)}
-              </div>
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-[#FDF8FC] tracking-tight">
+                Student Performance Studio
+              </h1>
+              <p className="text-xs sm:text-sm text-[#BDB4C3] mt-0.5">
+                Explore student data, train supervised ML models, and predict future academic performance.
+              </p>
             </div>
           </div>
 
-          {/* Sub-Card 3: Study Time Frosted Glass Columns with Capsule Footers */}
-          <div className="lg:col-span-4 glass-subcard rounded-[20px] p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-[#F5EFF7]">Study Hours vs G3</span>
-              <span className="text-[10px] font-mono text-[#95899E]">avg / 20</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center p-1 rounded-full bg-white/[0.05] border border-[rgba(255,210,235,0.20)]">
+              <button
+                type="button"
+                onClick={() => onToggleIncludeGrades(true)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                  includeGrades
+                    ? 'glass-pill-active font-semibold'
+                    : 'text-[#BDB4C3] hover:text-[#FDF8FC]'
+                }`}
+              >
+                With G1 & G2
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleIncludeGrades(false)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                  !includeGrades
+                    ? 'glass-pill-active font-semibold'
+                    : 'text-[#BDB4C3] hover:text-[#FDF8FC]'
+                }`}
+              >
+                Habits Only
+              </button>
             </div>
-            <SculptedBarChart
-              data={studyBars}
-              maxVal={15}
-              height={195}
-              capsuleLabels={true}
-            />
-          </div>
-        </div>
 
-        {/* Bottom 4 Smoked-Glass Micro-Cards with Champagne Sparklines */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <button
-            type="button"
-            onClick={() => onNavigate('eda')}
-            className="glass-subcard hover:border-white/20 rounded-[18px] p-3.5 text-left transition-all group"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#E6CCD9]">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                </span>
-                <span className="text-[11px] text-[#A89BB2]">Mean Absences</span>
+            <div className="hidden sm:flex items-center gap-2.5 pl-2 text-xs text-[#BDB4C3]">
+              <span className="w-8 h-8 rounded-full bg-white/[0.06] border border-[rgba(255,210,235,0.20)] flex items-center justify-center text-[#F8C6DF]">
+                <Calendar className="w-3.5 h-3.5" />
+              </span>
+              <div className="leading-tight">
+                <div className="text-[10.5px] text-[#928997]">Active Session</div>
+                <div className="font-medium text-[#FDF8FC] tabular-nums">{formattedDate}</div>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#7F738A] group-hover:text-white transition-colors" />
             </div>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                  {analytics.avgAbsences}
-                </span>
-                <span className="text-xs text-[#95899E]">/ term</span>
+          </div>
+        </section>
+
+        {/* 2. Four Premium Smoked-Glass KPI Cards */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* KPI 1: Total Students */}
+          <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+            <div className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center mb-3.5">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs text-[#BDB4C3] font-medium">Total Students</div>
+              <div className="mt-1 text-3xl font-display font-bold text-[#FDF8FC] tabular-nums">
+                {analytics.totalStudents}
+              </div>
+            </div>
+            <div className="mt-4 flex items-end justify-between gap-2">
+              <div>
+                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+                  <ArrowUpRight className="w-3 h-3" />
+                  <span>
+                    {dataset.rowCount > 0
+                      ? `${Math.round((analytics.totalStudents * 100) / dataset.rowCount)}%`
+                      : '100%'}
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-[#928997]">(from dataset)</div>
               </div>
               <RoseSparkline
-                id="mini_abs"
-                width={58}
-                height={22}
-                values={analytics.absencesBinned.map((a) => a.avgG3)}
+                id="kpi_total_students"
+                values={
+                  analytics.agePerformance.length >= 2
+                    ? analytics.agePerformance.map((a) => a.count)
+                    : [42, 88, 104, 96, 65]
+                }
               />
             </div>
+          </div>
+
+          {/* KPI 2: Average Final Grade */}
+          <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+            <div className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center mb-3.5">
+              <Star className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs text-[#BDB4C3] font-medium">Average Final Grade</div>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-3xl font-display font-bold text-[#FDF8FC] tabular-nums">
+                  {analytics.avgG3.toFixed(2)}
+                </span>
+                <span className="text-sm font-mono text-[#BDB4C3]">/ 20</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-end justify-between gap-2">
+              <div>
+                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+                  <ArrowUpRight className="w-3 h-3" />
+                  <span>Med {analytics.medianG3}</span>
+                </div>
+                <div className="text-[10.5px] text-[#928997]">(from dataset)</div>
+              </div>
+              <RoseSparkline
+                id="kpi_avg_grade"
+                values={
+                  analytics.studyVsGrade.length >= 2
+                    ? analytics.studyVsGrade.map((s) => s.avgG3)
+                    : [9.8, 10.3, 11.4, 11.9]
+                }
+              />
+            </div>
+          </div>
+
+          {/* KPI 3: Pass Percentage */}
+          <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+            <div className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center mb-3.5">
+              <Percent className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs text-[#BDB4C3] font-medium">Pass Percentage</div>
+              <div className="mt-1 flex items-baseline gap-0.5">
+                <span className="text-3xl font-display font-bold text-[#FDF8FC] tabular-nums">
+                  {analytics.passRate.toFixed(1)}
+                </span>
+                <span className="text-lg font-display font-semibold text-[#F8C6DF]">%</span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-end justify-between gap-2">
+              <div>
+                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+                  <ArrowUpRight className="w-3 h-3" />
+                  <span>{Math.round((analytics.passRate * analytics.totalStudents) / 100)} pass</span>
+                </div>
+                <div className="text-[10.5px] text-[#928997]">(G3 ≥ 10)</div>
+              </div>
+              <RoseSparkline
+                id="kpi_pass_pct"
+                values={
+                  analytics.studyVsGrade.length >= 2
+                    ? analytics.studyVsGrade.map((s) => s.passRate)
+                    : [58, 65, 74, 79]
+                }
+              />
+            </div>
+          </div>
+
+          {/* KPI 4: Highest Grade */}
+          <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+            <div className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center mb-3.5">
+              <Trophy className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs text-[#BDB4C3] font-medium">Highest Grade</div>
+              <div className="mt-1 text-3xl font-display font-bold text-[#FDF8FC] tabular-nums">
+                {analytics.highestG3}
+              </div>
+            </div>
+            <div className="mt-4 flex items-end justify-between gap-2">
+              <div>
+                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] tabular-nums">
+                  Scale 0–20
+                </div>
+                <div className="text-[10.5px] text-[#928997]">(in dataset)</div>
+              </div>
+              <RoseSparkline id="kpi_highest_grade" values={[14, 16, 15, 18, 19, 20]} />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Row 1 Charts: Final Grade Distribution + Performance Overview Donut */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-7 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Final Grade Distribution
+                </h2>
+              </div>
+
+              <select
+                value={distGradeCol}
+                onChange={(e) => setDistGradeCol(e.target.value as 'G3' | 'G2' | 'G1')}
+                aria-label="Select Grade Period"
+                className="glass-control px-3 py-1.5 rounded-full text-xs font-medium"
+              >
+                <option value="G3">G3 (Final Grade)</option>
+                <option value="G2">G2 (Period 2)</option>
+                <option value="G1">G1 (Period 1)</option>
+              </select>
+            </div>
+
+            <GradeRangeDistributionChart rows={activeRows} gradeCol={distGradeCol} />
+          </div>
+
+          <div className="lg:col-span-5 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Performance Overview
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('risk')}
+                className="text-[11px] text-[#F8C6DF] hover:text-[#FDF8FC] transition-colors whitespace-nowrap"
+              >
+                Risk Radar ({evaluation.atRiskCount}) →
+              </button>
+            </div>
+
+            <div className="my-auto">
+              <PerformanceDonutChart
+                centerLabel="Pass"
+                centerValue={`${analytics.passRate.toFixed(1)}%`}
+                segments={[
+                  {
+                    label: 'Pass (G3 ≥ 10)',
+                    displayValue: `${analytics.passRate.toFixed(1)}%`,
+                    share: analytics.passRate,
+                    tone: 'pink',
+                    subtext: `${Math.round((analytics.passRate * analytics.totalStudents) / 100)} students passing`,
+                  },
+                  {
+                    label: 'Fail (G3 < 10)',
+                    displayValue: `${failRate.toFixed(1)}%`,
+                    share: failRate,
+                    tone: 'blush',
+                    subtext: `${Math.round((failRate * analytics.totalStudents) / 100)} students below 10`,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Row 2 Panels: Key Insights + Model Comparison */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-6 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                  <Lightbulb className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Key Insights
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('eda')}
+                className="text-[11px] text-[#BDB4C3] hover:text-[#FDF8FC] transition-colors"
+              >
+                Explore All →
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {keyInsights.map((ins, idx) => {
+                const IconComp = ins.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="glass-subcard rounded-2xl px-3.5 py-2.5 flex items-center gap-3"
+                  >
+                    <span
+                      className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${
+                        ins.tone === 'lavender' ? 'lavender-icon-badge' : 'pink-icon-badge'
+                      }`}
+                    >
+                      <IconComp className="w-3.5 h-3.5" />
+                    </span>
+                    <p className="text-xs text-[#FDF8FC]/92 leading-relaxed">{ins.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Model Comparison
+                </h2>
+              </div>
+
+              <select
+                value={compMetric}
+                onChange={(e) => setCompMetric(e.target.value as 'r2' | 'cv' | 'mae' | 'rmse')}
+                aria-label="Select Evaluation Metric"
+                className="glass-control px-3 py-1.5 rounded-full text-xs font-medium"
+              >
+                <option value="r2">R² Score</option>
+                <option value="cv">5-Fold CV R²</option>
+                <option value="mae">MAE (Error)</option>
+                <option value="rmse">RMSE (Error)</option>
+              </select>
+            </div>
+
+            <ModelComparisonGlassChart
+              models={orderedComparisonModels}
+              metric={compMetric}
+              onSelectModel={(k) => {
+                onSelectModel(k);
+                onNavigate('insights');
+              }}
+            />
+          </div>
+        </section>
+
+        {/* 5. Row 3 Charts: Scatter Trend Plot + Gender-wise Performance Donut */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-7 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Study Time & Prior Grades vs Final Grade
+                </h2>
+              </div>
+
+              <select
+                value={scatterField}
+                onChange={(e) =>
+                  setScatterField(e.target.value as 'G2' | 'studytime' | 'G1' | 'absences')
+                }
+                aria-label="Select Scatter X-Axis"
+                className="glass-control px-3 py-1.5 rounded-full text-xs font-medium"
+              >
+                <option value="G2">G2 vs Final G3 (Trend)</option>
+                <option value="studytime">Study Time vs Final G3</option>
+                <option value="G1">G1 vs Final G3</option>
+                <option value="absences">Absences vs Final G3</option>
+              </select>
+            </div>
+
+            <StudyGradeScatterChart rows={activeRows} xField={scatterField} showTrend={true} />
+          </div>
+
+          <div className="lg:col-span-5 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg lavender-icon-badge flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5" />
+                </span>
+                <h2 className="text-sm sm:text-base font-display font-semibold text-[#FDF8FC]">
+                  Gender-wise Performance
+                </h2>
+              </div>
+            </div>
+
+            <div className="my-auto">
+              <PerformanceDonutChart
+                centerLabel="Avg Grade"
+                centerValue={analytics.avgG3.toFixed(2)}
+                segments={[
+                  {
+                    label: 'Female',
+                    displayValue: femStat ? femStat.avgG3.toFixed(2) : '—',
+                    share: femShare,
+                    tone: 'pink',
+                    subtext: femStat
+                      ? `Female (n=${femStat.count}): Avg ${femStat.avgG3}/20 · Pass ${femStat.passRate}%`
+                      : undefined,
+                  },
+                  {
+                    label: 'Male',
+                    displayValue: malStat ? malStat.avgG3.toFixed(2) : '—',
+                    share: malShare,
+                    tone: 'lavender',
+                    subtext: malStat
+                      ? `Male (n=${malStat.count}): Avg ${malStat.avgG3}/20 · Pass ${malStat.passRate}%`
+                      : undefined,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* =====================================================================
+          RIGHT LAYERED GLASS RAIL (3 Cols)
+          ===================================================================== */}
+      <aside className="xl:col-span-3 space-y-5">
+        {/* Card 1: Predict Student Performance CTA */}
+        <div className="glass-kpi rounded-[24px] p-6 relative overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-8 -top-8 w-36 h-36 rounded-full bg-[#F5A6CC]/22 blur-2xl"
+          />
+          <div className="w-11 h-11 rounded-2xl pink-icon-badge flex items-center justify-center mb-4">
+            <Sparkles className="w-5 h-5 text-[#FDF8FC]" />
+          </div>
+
+          <h2 className="text-lg font-display font-bold text-[#FDF8FC] leading-snug">
+            Predict Student Performance
+          </h2>
+          <p className="text-xs text-[#BDB4C3] leading-relaxed mt-2">
+            Enter student attributes and run trained Python ML regressors with counterfactual What-If insights.
+          </p>
+
+          {prediction && (
+            <div className="mt-4 px-3.5 py-2.5 rounded-2xl bg-white/[0.05] border border-[rgba(255,210,235,0.18)] flex items-center justify-between text-xs">
+              <span className="text-[#BDB4C3]">Active Profile G3</span>
+              <span className="font-mono font-bold text-[#F8C6DF] tabular-nums">
+                {prediction.predictedGrade.toFixed(2)} / 20
+              </span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => onNavigate('prediction')}
+            className="glass-cta w-full mt-5 py-3 px-4 rounded-full text-xs font-display font-bold flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            <span>Go to Prediction</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        {/* Card 2: Quick Stats */}
+        <div className="glass-shell rounded-[24px] p-5 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+              <BarChart3 className="w-3.5 h-3.5" />
+            </span>
+            <h2 className="text-sm font-display font-semibold text-[#FDF8FC]">Quick Stats</h2>
+          </div>
+
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-[11px] text-[#928997]">Active Cohort Subject</div>
+                <div className="text-sm font-display font-semibold text-[#FDF8FC] truncate">
+                  {quickStats.subjectLabel}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-[11px] text-[#928997]">Most Common Age</div>
+                <div className="text-sm font-display font-semibold text-[#FDF8FC] tabular-nums">
+                  {quickStats.modalAge}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full lavender-icon-badge flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-[11px] text-[#928997]">Top Family Education</div>
+                <div className="text-sm font-display font-semibold text-[#FDF8FC] truncate">
+                  {quickStats.topEdu}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full pink-icon-badge flex items-center justify-center shrink-0">
+                <Wifi className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-[11px] text-[#928997]">Internet Access</div>
+                <div className="text-sm font-display font-semibold text-[#FDF8FC] tabular-nums">
+                  {quickStats.internetText}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Dataset Info */}
+        <div className="glass-shell rounded-[24px] p-5 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
+                <Database className="w-3.5 h-3.5" />
+              </span>
+              <h2 className="text-sm font-display font-semibold text-[#FDF8FC]">Dataset Info</h2>
+            </div>
+
+            <div className="flex items-center p-0.5 rounded-full bg-white/[0.05] border border-[rgba(255,210,235,0.18)] text-[10px] font-mono">
+              <button
+                type="button"
+                onClick={() => onSwitchDataset('mat')}
+                className={`px-2 py-0.5 rounded-full transition-all ${
+                  dataset.datasetKey === 'mat'
+                    ? 'glass-pill-active font-semibold'
+                    : 'text-[#BDB4C3] hover:text-white'
+                }`}
+              >
+                MAT
+              </button>
+              <button
+                type="button"
+                onClick={() => onSwitchDataset('por')}
+                className={`px-2 py-0.5 rounded-full transition-all ${
+                  dataset.datasetKey === 'por'
+                    ? 'glass-pill-active font-semibold'
+                    : 'text-[#BDB4C3] hover:text-white'
+                }`}
+              >
+                POR
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 text-xs">
+            <div>
+              <div className="text-[10.5px] text-[#928997]">Dataset</div>
+              <div className="font-medium text-[#FDF8FC]">UCI Student Performance</div>
+            </div>
+
+            <div>
+              <div className="text-[10.5px] text-[#928997]">File</div>
+              <div className="font-mono text-[#F8C6DF]">
+                {dataset.datasetKey === 'por'
+                  ? 'student-por.csv'
+                  : dataset.datasetKey === 'mat'
+                  ? 'student-mat.csv'
+                  : 'uploaded-cohort.csv'}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div>
+                <div className="text-[10.5px] text-[#928997]">Total Rows</div>
+                <div className="text-sm font-mono font-semibold text-[#FDF8FC] tabular-nums">
+                  {dataset.rowCount}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10.5px] text-[#928997]">Total Columns</div>
+                <div className="text-sm font-mono font-semibold text-[#FDF8FC] tabular-nums">
+                  {dataset.columnCount}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <div className="text-[10.5px] text-[#928997]">Missing Values</div>
+                <div className="text-sm font-mono font-semibold text-[#FDF8FC] tabular-nums">
+                  {dataset.totalMissingImputed}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('risk')}
+                className="text-[11px] text-[#F8C6DF] hover:text-white flex items-center gap-1"
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>{evaluation.atRiskCount} at-risk</span>
+              </button>
+            </div>
+          </div>
 
           <button
             type="button"
             onClick={() => onNavigate('explorer')}
-            className="glass-subcard hover:border-white/20 rounded-[18px] p-3.5 text-left transition-all group"
+            className="w-full py-2.5 px-4 rounded-full bg-white/[0.06] hover:bg-white/[0.11] border border-[rgba(255,210,235,0.22)] text-xs font-medium text-[#FDF8FC] transition-all flex items-center justify-center gap-1.5"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#E6CCD9]">
-                  <Users className="w-3.5 h-3.5" />
-                </span>
-                <span className="text-[11px] text-[#A89BB2]">Active Students</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#7F738A] group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <span className="text-2xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                {analytics.totalStudents}
-              </span>
-              <RoseSparkline
-                id="mini_stu"
-                width={58}
-                height={22}
-                values={analytics.agePerformance.map((a) => a.count)}
-              />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('risk')}
-            className="glass-subcard hover:border-white/20 rounded-[18px] p-3.5 text-left transition-all group"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#E6CCD9]">
-                  <Award className="w-3.5 h-3.5" />
-                </span>
-                <span className="text-[11px] text-[#A89BB2]">At-Risk Flagged</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#7F738A] group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                  {evaluation.atRiskCount}
-                </span>
-                <span className="text-xs text-[#95899E]">&lt;10/20</span>
-              </div>
-              <RoseSparkline
-                id="mini_max"
-                width={58}
-                height={22}
-                values={[18, 15, 13, 11, 9, 8]}
-              />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('training')}
-            className="glass-subcard hover:border-white/20 rounded-[18px] p-3.5 text-left transition-all group"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#E6CCD9]">
-                  <Check className="w-3.5 h-3.5" />
-                </span>
-                <span className="text-[11px] text-[#A89BB2]">Best Test Model</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-[#7F738A] group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <span className="text-base font-display font-semibold text-[#FAF6FA] truncate">
-                {evaluation.bestModelName.replace(' Regressor', '')}
-              </span>
-              <RoseSparkline id="mini_mod" width={54} height={22} values={[0.68, 0.74, 0.81, 0.85]} />
-            </div>
+            <span>View Details</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[#F8C6DF]" />
           </button>
         </div>
-      </div>
-
-      {/* Right 3-Column Stacked Smoked-Glass Cards */}
-      <div className="xl:col-span-3 flex flex-col gap-5">
-        <div className="flex-1 glass-kpi rounded-[24px] p-6 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-full bg-[#EFE0E8] text-[#17111C] flex items-center justify-center shrink-0 shadow-[0_6px_18px_rgba(0,0,0,0.35)]">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-display font-semibold text-[#FAF6FA]">
-                  Grade Predictor
-                </h3>
-                <p className="text-xs text-[#95899E] mt-0.5">
-                  {includeGrades ? 'With G1 & G2 grades' : 'Habits & background'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => onNavigate('prediction')}
-              title="Open Student Predictor"
-              className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/12 border border-white/10 flex items-center justify-center text-[#C7B9D1] hover:text-white transition-colors shrink-0"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="mt-6">
-            <div className="text-[11px] text-[#95899E] mb-1">
-              Live Predicted Final G3
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                  {prediction ? prediction.predictedGrade.toFixed(1) : '15.2'}
-                </span>
-                <sup className="text-xs font-mono text-[#DFC0D1]">/20</sup>
-              </div>
-
-              <div className="flex items-center p-1 rounded-full bg-white/[0.04] border border-white/10">
-                <button
-                  type="button"
-                  onClick={() => onToggleIncludeGrades(false)}
-                  title="Exclude G1 & G2"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                    !includeGrades
-                      ? 'glass-pill-active'
-                      : 'text-[#95899E] hover:text-white'
-                  }`}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onToggleIncludeGrades(true)}
-                  title="Include G1 & G2"
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                    includeGrades
-                      ? 'glass-pill-active'
-                      : 'text-[#95899E] hover:text-white'
-                  }`}
-                >
-                  <Check className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 glass-kpi rounded-[24px] p-6 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-full bg-[#EFE0E8] text-[#17111C] flex items-center justify-center shrink-0 shadow-[0_6px_18px_rgba(0,0,0,0.35)]">
-                <Database className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-display font-semibold text-[#FAF6FA]">
-                  UCI Repository
-                </h3>
-                <p className="text-xs text-[#95899E] mt-0.5 truncate max-w-[140px]">
-                  {dataset.datasetKey === 'por' ? 'Portuguese Cohort' : 'Mathematics Cohort'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => onNavigate('explorer')}
-              title="Open Dataset Explorer"
-              className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/12 border border-white/10 flex items-center justify-center text-[#C7B9D1] hover:text-white transition-colors shrink-0"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="mt-6">
-            <div className="text-[11px] text-[#95899E] mb-1">
-              Verified Student Records
-            </div>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-display font-semibold text-[#FAF6FA] tabular-nums">
-                  {dataset.rowCount}
-                </span>
-                <sup className="text-xs font-mono text-[#DFC0D1]">{dataset.columnCount}c</sup>
-              </div>
-
-              <div className="flex items-center p-1 rounded-full bg-white/[0.04] border border-white/10">
-                <button
-                  type="button"
-                  onClick={() => onSwitchDataset('mat')}
-                  title="Mathematics (student-mat.csv)"
-                  className={`px-2.5 h-7 rounded-full text-[10px] font-mono font-semibold transition-all ${
-                    dataset.datasetKey === 'mat'
-                      ? 'glass-pill-active'
-                      : 'text-[#95899E] hover:text-white'
-                  }`}
-                >
-                  MAT
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSwitchDataset('por')}
-                  title="Portuguese (student-por.csv)"
-                  className={`px-2.5 h-7 rounded-full text-[10px] font-mono font-semibold transition-all ${
-                    dataset.datasetKey === 'por'
-                      ? 'glass-pill-active'
-                      : 'text-[#95899E] hover:text-white'
-                  }`}
-                >
-                  POR
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </aside>
     </div>
   );
 };
@@ -568,9 +883,9 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
     <div className="space-y-5">
       <div className="glass-shell rounded-[24px] p-5 flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[#9E93A6]">
-            <Database className="w-3.5 h-3.5 text-[#E6CCD9]" />
-            <span className="text-[#FAF6FA] font-medium">{dataset.datasetLabel}</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[#BDB4C3]">
+            <Database className="w-3.5 h-3.5 text-[#F5A6CC]" />
+            <span className="text-[#FDF8FC] font-semibold">{dataset.datasetLabel}</span>
             <span>·</span>
             <span className="tabular-nums">{dataset.rowCount} clean rows</span>
             <span>·</span>
@@ -580,7 +895,7 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
             <span>·</span>
             <span className="tabular-nums">Missing imputed: {dataset.totalMissingImputed}</span>
           </div>
-          <p className="text-xs text-[#887C93]">
+          <p className="text-xs text-[#928997]">
             Switch between official UCI datasets, export your filtered slice as CSV, or upload custom student records.
           </p>
         </div>
@@ -591,7 +906,7 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
             className={`px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
               dataset.datasetKey === 'mat'
                 ? 'glass-pill-active font-semibold'
-                : 'bg-white/[0.04] border border-white/10 text-[#C7B9D1] hover:text-white'
+                : 'glass-control text-[#BDB4C3] hover:text-white'
             }`}
           >
             Mathematics (395)
@@ -601,14 +916,14 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
             className={`px-3.5 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
               dataset.datasetKey === 'por'
                 ? 'glass-pill-active font-semibold'
-                : 'bg-white/[0.04] border border-white/10 text-[#C7B9D1] hover:text-white'
+                : 'glass-control text-[#BDB4C3] hover:text-white'
             }`}
           >
             Portuguese (649)
           </button>
 
-          <label className="px-3.5 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-[#F4EFF6] text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 whitespace-nowrap">
-            <Upload className="w-3.5 h-3.5 text-[#E6CCD9]" />
+          <label className="glass-control px-3.5 py-2 rounded-full text-xs font-medium cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
+            <Upload className="w-3.5 h-3.5 text-[#F5A6CC]" />
             <span>Upload CSV</span>
             <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
           </label>
@@ -616,40 +931,40 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
           <button
             type="button"
             onClick={() => exportRowsToCsv(searchedRows, `filtered_${dataset.datasetKey}_cohort.csv`)}
-            className="px-3.5 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-[#E6DCEB] text-xs font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors"
+            className="glass-control px-3.5 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 whitespace-nowrap"
           >
-            <FileDown className="w-3.5 h-3.5 text-[#E6CCD9]" />
+            <FileDown className="w-3.5 h-3.5 text-[#F8C6DF]" />
             <span>Export Filtered ({searchedRows.length})</span>
           </button>
 
           <a
             href="/api/dataset/download/mat"
             download="student-mat.csv"
-            className="px-3 py-2 rounded-full bg-white/[0.03] hover:bg-white/10 border border-white/[0.08] text-[#D4C9DC] text-xs font-medium flex items-center gap-1.5 whitespace-nowrap"
+            className="glass-control px-3 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 whitespace-nowrap"
           >
-            <Download className="w-3.5 h-3.5 text-[#E6CCD9]" />
+            <Download className="w-3.5 h-3.5 text-[#F8C6DF]" />
             <span>MAT</span>
           </a>
           <a
             href="/api/dataset/download/por"
             download="student-por.csv"
-            className="px-3 py-2 rounded-full bg-white/[0.03] hover:bg-white/10 border border-white/[0.08] text-[#D4C9DC] text-xs font-medium flex items-center gap-1.5 whitespace-nowrap"
+            className="glass-control px-3 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 whitespace-nowrap"
           >
-            <Download className="w-3.5 h-3.5 text-[#E6CCD9]" />
+            <Download className="w-3.5 h-3.5 text-[#C4A8F5]" />
             <span>POR</span>
           </a>
         </div>
       </div>
 
-      <div className="glass-shell rounded-[26px] p-6">
+      <div className="glass-shell rounded-[24px] p-6">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-1.5 p-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-white/[0.04] border border-[rgba(255,210,235,0.18)]">
             <button
               onClick={() => setSubTab('records')}
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 subTab === 'records'
                   ? 'glass-pill-active font-semibold'
-                  : 'text-[#B8ABC2] hover:text-white'
+                  : 'text-[#BDB4C3] hover:text-white'
               }`}
             >
               Student Records ({searchedRows.length})
@@ -659,7 +974,7 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 subTab === 'schema'
                   ? 'glass-pill-active font-semibold'
-                  : 'text-[#B8ABC2] hover:text-white'
+                  : 'text-[#BDB4C3] hover:text-white'
               }`}
             >
               Statistics, Data Types & Missing ({dataset.columnCount})
@@ -668,7 +983,7 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
 
           {subTab === 'records' && (
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 text-[#95899E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#BDB4C3] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={globalSearch}
@@ -677,7 +992,7 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
                   setPageIdx(0);
                 }}
                 placeholder="Search records (e.g. teacher, GP)..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-full bg-white/[0.035] border border-white/10 text-xs text-white placeholder-[#786C82] focus:outline-none focus:border-white/30"
+                className="glass-control w-full pl-9 pr-3 py-1.5 rounded-full text-xs placeholder-[#928997]"
               />
             </div>
           )}
@@ -685,16 +1000,16 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
 
         {subTab === 'records' ? (
           <>
-            <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+            <div className="overflow-x-auto rounded-2xl border border-[rgba(255,210,235,0.18)]">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-white/[0.035] text-[#C7B9D1] border-b border-white/[0.08]">
+                  <tr className="bg-white/[0.05] text-[#BDB4C3] border-b border-[rgba(255,210,235,0.16)]">
                     <th className="py-2.5 px-3 font-semibold">#</th>
                     {dataset.columns.map((col) => (
                       <th
                         key={col}
                         className={`py-2.5 px-3 font-semibold whitespace-nowrap ${
-                          col === 'G3' ? 'text-[#FAF6FA] bg-white/[0.06]' : ''
+                          col === 'G3' ? 'text-[#F8C6DF] bg-[#F5A6CC]/12' : ''
                         }`}
                       >
                         {col}
@@ -702,10 +1017,10 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.045]">
+                <tbody className="divide-y divide-white/[0.05]">
                   {visibleRows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-white/[0.035] transition-colors">
-                      <td className="py-2 px-3 font-mono tabular-nums text-[#887C93]">
+                    <tr key={idx} className="hover:bg-white/[0.045] transition-colors">
+                      <td className="py-2 px-3 font-mono tabular-nums text-[#928997]">
                         {safePage * pageSize + idx + 1}
                       </td>
                       {dataset.columns.map((col) => {
@@ -715,12 +1030,14 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
                           <td
                             key={col}
                             className={`py-2 px-3 whitespace-nowrap ${
-                              isNum ? 'font-mono tabular-nums text-right text-[#EAE3EE]' : 'text-[#D0C4D8]'
+                              isNum
+                                ? 'font-mono tabular-nums text-right text-[#FDF8FC]'
+                                : 'text-[#BDB4C3]'
                             } ${
                               col === 'G3'
                                 ? Number(val) >= 10
-                                  ? 'font-semibold text-[#EAD0DF] bg-white/[0.04]'
-                                  : 'font-semibold text-[#D4A3B4] bg-white/[0.04]'
+                                  ? 'font-semibold text-[#F8C6DF] bg-[#F5A6CC]/[0.08]'
+                                  : 'font-semibold text-[#C4A8F5] bg-[#C4A8F5]/[0.08]'
                                 : ''
                             }`}
                           >
@@ -734,26 +1051,27 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
               </table>
             </div>
 
-            <div className="flex items-center justify-between mt-4 text-xs text-[#9E93A6]">
+            <div className="flex items-center justify-between mt-4 text-xs text-[#BDB4C3]">
               <span className="tabular-nums">
                 Showing {searchedRows.length === 0 ? 0 : safePage * pageSize + 1}–
-                {Math.min(searchedRows.length, (safePage + 1) * pageSize)} of {searchedRows.length} records
+                {Math.min(searchedRows.length, (safePage + 1) * pageSize)} of {searchedRows.length}{' '}
+                records
               </span>
               <div className="flex items-center gap-2">
                 <button
                   disabled={safePage === 0}
                   onClick={() => setPageIdx((p) => Math.max(0, p - 1))}
-                  className="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 disabled:opacity-35 hover:bg-white/10 text-white transition-colors"
+                  className="glass-control px-3.5 py-1.5 rounded-full disabled:opacity-35"
                 >
                   Previous
                 </button>
-                <span className="font-mono tabular-nums">
+                <span className="font-mono tabular-nums text-[#FDF8FC]">
                   {safePage + 1} / {totalPages}
                 </span>
                 <button
                   disabled={safePage >= totalPages - 1}
                   onClick={() => setPageIdx((p) => Math.min(totalPages - 1, p + 1))}
-                  className="px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 disabled:opacity-35 hover:bg-white/10 text-white transition-colors"
+                  className="glass-control px-3.5 py-1.5 rounded-full disabled:opacity-35"
                 >
                   Next
                 </button>
@@ -761,10 +1079,10 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
             </div>
           </>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+          <div className="overflow-x-auto rounded-2xl border border-[rgba(255,210,235,0.18)]">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-white/[0.035] text-[#C7B9D1] border-b border-white/[0.08]">
+                <tr className="bg-white/[0.05] text-[#BDB4C3] border-b border-[rgba(255,210,235,0.16)]">
                   <th className="py-2.5 px-3 font-semibold">Column</th>
                   <th className="py-2.5 px-3 font-semibold">Data Type</th>
                   <th className="py-2.5 px-3 font-semibold text-right">Missing</th>
@@ -775,27 +1093,27 @@ export const ExplorerPage: React.FC<ExplorerProps> = ({
                   <th className="py-2.5 px-3 font-semibold text-right">Max</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.045]">
+              <tbody className="divide-y divide-white/[0.05]">
                 {dataset.columnStats.map((st) => (
-                  <tr key={st.column} className="hover:bg-white/[0.035]">
-                    <td className="py-2 px-3 font-semibold text-[#FAF6FA]">{st.column}</td>
-                    <td className="py-2 px-3 font-mono text-[#E2C4D4]">{st.dtype}</td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#9E93A6]">
+                  <tr key={st.column} className="hover:bg-white/[0.045]">
+                    <td className="py-2 px-3 font-semibold text-[#FDF8FC]">{st.column}</td>
+                    <td className="py-2 px-3 font-mono text-[#F8C6DF]">{st.dtype}</td>
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#BDB4C3]">
                       {st.missing}
                     </td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#F5EFF7]">
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#FDF8FC]">
                       {st.mean !== undefined ? st.mean : `${st.top} (${st.freq})`}
                     </td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#9E93A6]">
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#BDB4C3]">
                       {st.std !== undefined ? st.std : `${st.unique} classes`}
                     </td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#9E93A6]">
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#928997]">
                       {st.min !== undefined ? st.min : '—'}
                     </td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#FAF6FA]">
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#FDF8FC]">
                       {st.median !== undefined ? st.median : '—'}
                     </td>
-                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#9E93A6]">
+                    <td className="py-2 px-3 font-mono tabular-nums text-right text-[#928997]">
                       {st.max !== undefined ? st.max : '—'}
                     </td>
                   </tr>
