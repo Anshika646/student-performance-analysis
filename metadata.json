@@ -1,0 +1,6 @@
+{
+  "name": "EduPulse — Student Performance ML & Analytics",
+  "description": "End-to-end Machine Learning & Analytics System built on the UCI Student Performance Dataset featuring Linear Regression, Decision Tree, and Random Forest Regressors, interactive EDA, and live grade prediction.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
