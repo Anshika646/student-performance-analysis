@@ -156,11 +156,20 @@ def handle_action(payload: dict) -> dict:
 
 def run_daemon():
     """Long-lived line-delimited JSON RPC worker for instant server.ts queries."""
-    # Pre-warm primary Mathematics dataset on startup
-    try:
-        handle_action({"action": "full_bundle", "datasetKey": "mat"})
-    except Exception:
-        pass
+    import threading
+
+    lock = threading.Lock()
+
+    def _warm():
+        try:
+            with lock:
+                handle_action({"action": "full_bundle", "datasetKey": "mat"})
+            with lock:
+                handle_action({"action": "full_bundle", "datasetKey": "por"})
+        except Exception:
+            pass
+
+    threading.Thread(target=_warm, daemon=True).start()
 
     for line in sys.stdin:
         line = line.strip()
@@ -170,7 +179,8 @@ def run_daemon():
         try:
             msg = json.loads(line)
             req_id = msg.get("id")
-            res = handle_action(msg.get("payload", {}))
+            with lock:
+                res = handle_action(msg.get("payload", {}))
             out = {"id": req_id, **res}
         except Exception as exc:
             out = {

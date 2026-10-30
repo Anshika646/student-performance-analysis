@@ -1,10 +1,10 @@
 """
 prediction.py
 -------------
-Executes live student final-grade (G3) inference using the trained regression models,
-computes individual feature contribution impacts relative to the training cohort baseline,
-classifies academic performance tiers, and generates personalized, realistic academic
-improvement suggestions.
+Executes live student final-grade (G3) inference using the four trained regression
+models (Random Forest, Gradient Boosting, Linear Regression, Decision Tree),
+computes individual feature contribution impacts, runs What-If counterfactual
+sensitivity sweeps, and generates personalized academic improvement suggestions.
 """
 
 from typing import Any, Dict, List
@@ -17,6 +17,31 @@ try:
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
+
+VALID_MODEL_KEYS = ("random_forest", "gradient_boosting", "linear_regression", "decision_tree")
+
+
+def _run_single_model(
+    model_key: str,
+    models_runtime: Dict[str, Any],
+    X_std: List[List[float]],
+    X_raw: List[List[float]],
+) -> float:
+    if model_key == "linear_regression":
+        m = models_runtime["lr"]
+        inp = np.array(X_std) if HAS_NUMPY and hasattr(m, "n_features_in_") else X_std
+        return float(m.predict(inp)[0])
+    if model_key == "gradient_boosting":
+        m = models_runtime["gb"]
+        inp = np.array(X_raw) if HAS_NUMPY and hasattr(m, "n_features_in_") else X_raw
+        return float(m.predict(inp)[0])
+    if model_key == "decision_tree":
+        m = models_runtime["dt"]
+        inp = np.array(X_raw) if HAS_NUMPY and hasattr(m, "n_features_in_") else X_raw
+        return float(m.predict(inp)[0])
+    m = models_runtime["rf"]
+    inp = np.array(X_raw) if HAS_NUMPY and hasattr(m, "n_features_in_") else X_raw
+    return float(m.predict(inp)[0])
 
 
 def classify_grade(score: float) -> Dict[str, str]:
@@ -58,40 +83,26 @@ def predict_student_grade(
 ) -> Dict[str, Any]:
     """
     Run inference on a single student profile using the selected trained model,
-    compute directional factor contributions, and synthesize actionable guidance.
+    compute directional factor contributions, and execute What-If counterfactual sweeps.
     """
     preprocessor: StudentPreprocessor = models_runtime["preprocessor"]
     features: List[str] = models_runtime["features"]
     include_grades: bool = models_runtime["include_grades"]
 
-    selected_key = model_key if model_key in ("linear_regression", "random_forest", "decision_tree") else "random_forest"
+    selected_key = model_key if model_key in VALID_MODEL_KEYS else "random_forest"
 
     X_std = preprocessor.transform_standardized([student_input])
     X_raw = preprocessor.transform_raw_numeric([student_input])
 
-    if selected_key == "linear_regression":
-        model = models_runtime["lr"]
-        raw_pred = float(model.predict(np.array(X_std) if HAS_NUMPY and hasattr(model, "n_features_in_") else X_std)[0])
-    elif selected_key == "decision_tree":
-        model = models_runtime["dt"]
-        raw_pred = float(model.predict(np.array(X_raw) if HAS_NUMPY and hasattr(model, "n_features_in_") else X_raw)[0])
-    else:
-        model = models_runtime["rf"]
-        raw_pred = float(model.predict(np.array(X_raw) if HAS_NUMPY and hasattr(model, "n_features_in_") else X_raw)[0])
-
+    raw_pred = _run_single_model(selected_key, models_runtime, X_std, X_raw)
     predicted_grade = round(max(0.0, min(20.0, raw_pred)), 2)
 
-    # Also compute predictions across all 3 models for transparent cross-model comparison
-    lr_m = models_runtime["lr"]
-    rf_m = models_runtime["rf"]
-    dt_m = models_runtime["dt"]
+    all_preds = {
+        k: round(max(0.0, min(20.0, _run_single_model(k, models_runtime, X_std, X_raw))), 2)
+        for k in VALID_MODEL_KEYS
+    }
 
-    lr_val = round(max(0.0, min(20.0, float(lr_m.predict(np.array(X_std) if HAS_NUMPY and hasattr(lr_m, "n_features_in_") else X_std)[0]))), 2)
-    rf_val = round(max(0.0, min(20.0, float(rf_m.predict(np.array(X_raw) if HAS_NUMPY and hasattr(rf_m, "n_features_in_") else X_raw)[0]))), 2)
-    dt_val = round(max(0.0, min(20.0, float(dt_m.predict(np.array(X_raw) if HAS_NUMPY and hasattr(dt_m, "n_features_in_") else X_raw)[0]))), 2)
-
-    # Compute individual factor impacts using standardized z-score * directional model sensitivity
-    # For tree models, perturb each feature to its training-cohort mean to measure exact local marginal contribution!
+    # Marginal factor impacts vs cohort mean
     baseline_row = dict(student_input)
     impacts: List[Dict[str, Any]] = []
     imp_lookup = {
@@ -101,7 +112,6 @@ def predict_student_grade(
 
     for idx, feat in enumerate(features):
         perturbed = dict(baseline_row)
-        # Replace single feature with training-cohort mean
         cohort_mean = preprocessor.raw_means[feat]
         if feat == "sex":
             perturbed[feat] = "M" if cohort_mean >= 0.5 else "F"
@@ -115,11 +125,9 @@ def predict_student_grade(
             coef = models_runtime["lr_signed_coefs"][idx]
             delta = z_val * coef
         else:
+            p_std = preprocessor.transform_standardized([perturbed])
             p_raw = preprocessor.transform_raw_numeric([perturbed])
-            active_m = dt_m if selected_key == "decision_tree" else rf_m
-            ref_pred = float(
-                active_m.predict(np.array(p_raw) if HAS_NUMPY and hasattr(active_m, "n_features_in_") else p_raw)[0]
-            )
+            ref_pred = _run_single_model(selected_key, models_runtime, p_std, p_raw)
             delta = raw_pred - ref_pred
 
         impacts.append({
@@ -134,7 +142,24 @@ def predict_student_grade(
 
     impacts.sort(key=lambda x: (abs(x["impact"]), x["importance"]), reverse=True)
 
-    # Generate realistic, personalized academic improvement recommendations
+    # Live What-If Counterfactual Sensitivity Curves computed by the trained model
+    study_Labels = {1: "<2h", 2: "2–5h", 3: "5–10h", 4: ">10h"}
+    what_if_study = []
+    for st in [1, 2, 3, 4]:
+        cand = {**student_input, "studytime": st}
+        cs = preprocessor.transform_standardized([cand])
+        cr = preprocessor.transform_raw_numeric([cand])
+        val = round(max(0.0, min(20.0, _run_single_model(selected_key, models_runtime, cs, cr))), 2)
+        what_if_study.append({"label": study_Labels[st], "value": val, "active": int(student_input.get("studytime", 2)) == st})
+
+    what_if_absences = []
+    for ab in [0, 2, 6, 12, 22]:
+        cand = {**student_input, "absences": ab}
+        cs = preprocessor.transform_standardized([cand])
+        cr = preprocessor.transform_raw_numeric([cand])
+        val = round(max(0.0, min(20.0, _run_single_model(selected_key, models_runtime, cs, cr))), 2)
+        what_if_absences.append({"label": f"{ab}d", "value": val})
+
     suggestions = _build_improvement_suggestions(student_input, predicted_grade, include_grades)
     classification = classify_grade(predicted_grade)
 
@@ -147,12 +172,10 @@ def predict_student_grade(
         "cohortAverage": round(models_runtime["y_train_mean"], 2),
         "deltaVsCohort": round(predicted_grade - models_runtime["y_train_mean"], 2),
         "classification": classification,
-        "allModelPredictions": {
-            "linear_regression": lr_val,
-            "random_forest": rf_val,
-            "decision_tree": dt_val,
-        },
+        "allModelPredictions": all_preds,
         "influencingFactors": impacts,
+        "whatIfStudy": what_if_study,
+        "whatIfAbsences": what_if_absences,
         "suggestions": suggestions,
     }
 

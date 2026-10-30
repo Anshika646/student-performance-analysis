@@ -37,6 +37,29 @@ export function filterDatasetRows(
   });
 }
 
+export function exportRowsToCsv(rows: Record<string, any>[], filename: string) {
+  if (!rows.length) return;
+  const cols = Object.keys(rows[0]);
+  const lines = [
+    cols.join(','),
+    ...rows.map((r) =>
+      cols
+        .map((c) => {
+          const val = String(r[c] ?? '');
+          return val.includes(',') || val.includes('"') ? `"${val.replace(/"/g, '""')}"` : val;
+        })
+        .join(',')
+    ),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: string[]) {
   const n = rows.length;
   if (n === 0) {
@@ -48,6 +71,7 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       lowestG3: 0,
       medianG3: 0,
       avgAbsences: 0,
+      periodProgression: [] as { period: string; passingAvg: number; failingAvg: number; overallAvg: number }[],
       gradeDistribution: [] as { grade: number; count: number; status: string }[],
       studyVsGrade: [] as { label: string; avgG3: number; passRate: number; count: number }[],
       absencesBinned: [] as { label: string; avgG3: number; passRate: number; count: number }[],
@@ -71,8 +95,37 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
   const passCount = g3Vals.filter((v) => v >= 10).length;
   const mid = Math.floor(n / 2);
   const medianG3 = n % 2 === 1 ? g3Vals[mid] : (g3Vals[mid - 1] + g3Vals[mid]) / 2;
-  const avgAbsences =
-    rows.reduce((acc, r) => acc + Number(r.absences ?? 0), 0) / n;
+  const avgAbsences = rows.reduce((acc, r) => acc + Number(r.absences ?? 0), 0) / n;
+
+  // Longitudinal Period Trajectory: G1 -> G2 -> G3
+  const passingRows = rows.filter((r) => Number(r.G3 ?? 0) >= 10);
+  const failingRows = rows.filter((r) => Number(r.G3 ?? 0) < 10);
+  const meanCol = (arr: Record<string, any>[], col: string) =>
+    arr.length ? Number((arr.reduce((s, r) => s + Number(r[col] ?? 0), 0) / arr.length).toFixed(2)) : 0;
+
+  const periodProgression =
+    rows[0].G1 !== undefined && rows[0].G2 !== undefined
+      ? [
+          {
+            period: 'Period 1 (G1)',
+            passingAvg: meanCol(passingRows, 'G1'),
+            failingAvg: meanCol(failingRows, 'G1'),
+            overallAvg: meanCol(rows, 'G1'),
+          },
+          {
+            period: 'Period 2 (G2)',
+            passingAvg: meanCol(passingRows, 'G2'),
+            failingAvg: meanCol(failingRows, 'G2'),
+            overallAvg: meanCol(rows, 'G2'),
+          },
+          {
+            period: 'Final Exam (G3)',
+            passingAvg: meanCol(passingRows, 'G3'),
+            failingAvg: meanCol(failingRows, 'G3'),
+            overallAvg: meanCol(rows, 'G3'),
+          },
+        ]
+      : [];
 
   // 1. Grade distribution 0..20
   const bins = new Array(21).fill(0);
@@ -86,7 +139,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
     status: grade >= 10 ? 'Pass' : 'Fail',
   }));
 
-  // Helper group aggregator
   const groupStats = (keyFn: (r: Record<string, any>) => string | number) => {
     const map = new Map<string | number, number[]>();
     for (const r of rows) {
@@ -98,7 +150,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
     return map;
   };
 
-  // 2. Study time vs G3
   const stMap = groupStats((r) => Number(r.studytime ?? 2));
   const studyVsGrade = Array.from(stMap.keys())
     .sort((a, b) => Number(a) - Number(b))
@@ -114,7 +165,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       };
     });
 
-  // 3. Absences vs Performance
   const absDefs: [string, (a: number) => boolean][] = [
     ['0 days', (a) => a === 0],
     ['1–3 days', (a) => a >= 1 && a <= 3],
@@ -139,7 +189,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
     })
     .filter(Boolean) as { label: string; avgG3: number; passRate: number; count: number }[];
 
-  // 4. Previous Failures vs Grades
   const failMap = groupStats((r) => Number(r.failures ?? 0));
   const failuresVsGrade = Array.from(failMap.keys())
     .sort((a, b) => Number(a) - Number(b))
@@ -155,7 +204,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       };
     });
 
-  // 5. Gender-wise Performance
   const sexMap = groupStats((r) => String(r.sex ?? 'F'));
   const genderPerformance = Array.from(sexMap.keys())
     .sort()
@@ -171,7 +219,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       };
     });
 
-  // 6. Age-wise Performance
   const ageMap = groupStats((r) => Number(r.age ?? 17));
   const agePerformance = Array.from(ageMap.keys())
     .sort((a, b) => Number(a) - Number(b))
@@ -187,7 +234,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       };
     });
 
-  // 7. Family Education vs Performance (Medu & Fedu)
   const meduMap = groupStats((r) => Number(r.Medu ?? 0));
   const feduMap = groupStats((r) => Number(r.Fedu ?? 0));
   const eduLevels = Array.from(new Set([...meduMap.keys(), ...feduMap.keys()])).sort(
@@ -207,7 +253,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
     };
   });
 
-  // 8. Internet Access vs Performance
   const netMap = groupStats((r) => String(r.internet ?? 'yes').toLowerCase());
   const internetPerformance = Array.from(netMap.keys())
     .sort()
@@ -224,7 +269,6 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
       };
     });
 
-  // 9. Dynamic Pearson Correlation Matrix on filtered cohort
   const correlationMatrix = computePearsonMatrix(rows, corrCols);
 
   return {
@@ -235,6 +279,7 @@ export function computeDynamicAnalytics(rows: Record<string, any>[], corrCols: s
     lowestG3: g3Vals[0],
     medianG3: Number(medianG3.toFixed(1)),
     avgAbsences: Number(avgAbsences.toFixed(1)),
+    periodProgression,
     gradeDistribution,
     studyVsGrade,
     absencesBinned,

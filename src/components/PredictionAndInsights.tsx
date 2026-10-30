@@ -1,26 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ArrowDownRight,
   ArrowUpRight,
   Code2,
   Download,
+  FileDown,
   Lightbulb,
   Play,
+  ShieldAlert,
+  Sliders,
+  Sparkles,
   X,
 } from 'lucide-react';
 import {
+  AtRiskStudent,
   EvaluationPayload,
   ModelKey,
   PredictionPayload,
   PythonSourceFile,
   StudentInputProfile,
 } from '../types';
-import { EDU_LABELS, STUDY_LABELS } from '../utils/analytics';
+import { EDU_LABELS, exportRowsToCsv, STUDY_LABELS } from '../utils/analytics';
 import {
   ActualVsPredictedScatter,
   FeatureImportanceBars,
   GradeGauge,
   ResidualHistogram,
+  SculptedBarChart,
 } from './Charts';
 
 interface PredictionPageProps {
@@ -97,6 +103,8 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
   prediction,
   isPredicting,
 }) => {
+  const [whatIfTab, setWhatIfTab] = useState<'study' | 'absences'>('study');
+
   const updateField = <K extends keyof StudentInputProfile>(
     key: K,
     val: StudentInputProfile[K]
@@ -106,14 +114,14 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-      {/* Left Column: Sleek Dark Smoked-Glass Student Profile Form */}
+      {/* Left Column: Sleek Smoked-Glass Student Profile Form */}
       <div className="xl:col-span-6 glass-shell rounded-[26px] p-6 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
           <div>
-            <h2 className="text-lg font-display font-semibold text-white">
+            <h2 className="text-lg font-display font-semibold text-[#FAF6FA]">
               Student Input Parameters
             </h2>
-            <p className="text-xs text-[#9E90A8]">
+            <p className="text-xs text-[#95899E]">
               Configure demographics, study habits, and optional prior grades
             </p>
           </div>
@@ -127,7 +135,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                   onChangeInput(p.profile);
                   onRunPredict(p.profile);
                 }}
-                className="px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-[#4B2E42] border border-white/10 hover:border-[#F4B6D6]/45 text-[11px] font-medium text-[#E8DCEB] transition-all whitespace-nowrap"
+                className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 text-[11px] font-medium text-[#E5DCEB] transition-all whitespace-nowrap"
               >
                 {p.name}
               </button>
@@ -141,12 +149,12 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             <label className="block text-xs font-medium text-[#C7B9D1] mb-1.5">
               Prediction Mode
             </label>
-            <div className="grid grid-cols-2 p-1 rounded-full bg-white/[0.04] border border-white/10">
+            <div className="grid grid-cols-2 p-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => onToggleIncludeGrades(true)}
-                className={`py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  includeGrades ? 'bg-[#F4B6D6] text-[#17101C]' : 'text-[#A89BB2] hover:text-white'
+                className={`py-1.5 rounded-full text-xs font-medium transition-all ${
+                  includeGrades ? 'glass-pill-active font-semibold' : 'text-[#A89BB2] hover:text-white'
                 }`}
               >
                 With G1 & G2
@@ -154,8 +162,8 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
               <button
                 type="button"
                 onClick={() => onToggleIncludeGrades(false)}
-                className={`py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  !includeGrades ? 'bg-[#F4B6D6] text-[#17101C]' : 'text-[#A89BB2] hover:text-white'
+                className={`py-1.5 rounded-full text-xs font-medium transition-all ${
+                  !includeGrades ? 'glass-pill-active font-semibold' : 'text-[#A89BB2] hover:text-white'
                 }`}
               >
                 Without G1 & G2
@@ -170,22 +178,22 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             <select
               value={selectedModel}
               onChange={(e) => onSelectModel(e.target.value as ModelKey)}
-              className="w-full px-3.5 py-2 rounded-full bg-white/[0.05] border border-white/12 text-xs font-medium text-white focus:outline-none focus:border-[#F4B6D6]/65"
+              className="w-full px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/12 text-xs font-medium text-white focus:outline-none focus:border-white/30"
             >
               <option value="random_forest">Random Forest Regressor</option>
+              <option value="gradient_boosting">Gradient Boosting Regressor</option>
               <option value="linear_regression">Linear Regression</option>
               <option value="decision_tree">Decision Tree Regressor</option>
             </select>
           </div>
         </div>
 
-        {/* Conditional G1 & G2 Sliders when Mode 1 is Active */}
         {includeGrades && (
-          <div className="glass-subcard rounded-[20px] p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border border-[#F4B6D6]/20">
+          <div className="glass-subcard rounded-[20px] p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="flex justify-between text-xs mb-1.5">
                 <span className="text-[#C7B9D1]">First Period Grade (G1)</span>
-                <span className="font-mono tabular-nums font-semibold text-[#F4B6D6]">
+                <span className="font-mono tabular-nums font-semibold text-[#EAD0DF]">
                   {studentInput.G1} / 20
                 </span>
               </div>
@@ -195,14 +203,14 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 max={20}
                 value={studentInput.G1}
                 onChange={(e) => updateField('G1', Number(e.target.value))}
-                className="w-full accent-[#F4B6D6]"
+                className="w-full accent-[#DFBACC]"
               />
             </div>
 
             <div>
               <div className="flex justify-between text-xs mb-1.5">
                 <span className="text-[#C7B9D1]">Second Period Grade (G2)</span>
-                <span className="font-mono tabular-nums font-semibold text-[#F4B6D6]">
+                <span className="font-mono tabular-nums font-semibold text-[#EAD0DF]">
                   {studentInput.G2} / 20
                 </span>
               </div>
@@ -212,7 +220,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 max={20}
                 value={studentInput.G2}
                 onChange={(e) => updateField('G2', Number(e.target.value))}
-                className="w-full accent-[#F4B6D6]"
+                className="w-full accent-[#DFBACC]"
               />
             </div>
           </div>
@@ -231,7 +239,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
               max={22}
               value={studentInput.age}
               onChange={(e) => updateField('age', Number(e.target.value))}
-              className="w-full accent-[#F4B6D6]"
+              className="w-full accent-[#DFBACC]"
             />
           </div>
 
@@ -246,7 +254,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
               max={60}
               value={studentInput.absences}
               onChange={(e) => updateField('absences', Number(e.target.value))}
-              className="w-full accent-[#F4B6D6]"
+              className="w-full accent-[#DFBACC]"
             />
           </div>
 
@@ -258,10 +266,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                   key={g}
                   type="button"
                   onClick={() => updateField('sex', g)}
-                  className={`py-2 rounded-full font-semibold border transition-all ${
+                  className={`py-2 rounded-full font-medium transition-all ${
                     studentInput.sex === g
-                      ? 'bg-[#4B2E42]/85 text-[#FAD8EA] border-[#F4B6D6]/60'
-                      : 'bg-white/[0.03] text-[#A89BB2] border-white/10 hover:text-white'
+                      ? 'glass-pill-active font-semibold'
+                      : 'bg-white/[0.03] text-[#A89BB2] border border-white/10 hover:text-white'
                   }`}
                 >
                   {g === 'F' ? 'Female (F)' : 'Male (M)'}
@@ -277,7 +285,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             <select
               value={studentInput.studytime}
               onChange={(e) => updateField('studytime', Number(e.target.value))}
-              className="w-full px-3.5 py-2 rounded-full bg-white/[0.05] border border-white/12 font-medium text-white focus:outline-none focus:border-[#F4B6D6]/65"
+              className="w-full px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/12 font-medium text-white focus:outline-none focus:border-white/30"
             >
               {[1, 2, 3, 4].map((st) => (
                 <option key={st} value={st}>
@@ -297,10 +305,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                   key={f}
                   type="button"
                   onClick={() => updateField('failures', f)}
-                  className={`py-2 rounded-full font-mono font-semibold border transition-all ${
+                  className={`py-2 rounded-full font-mono font-medium transition-all ${
                     studentInput.failures === f
-                      ? 'bg-[#F4B6D6] text-[#17101C] border-[#F4B6D6]'
-                      : 'bg-white/[0.03] text-[#A89BB2] border-white/10 hover:text-white'
+                      ? 'glass-pill-active font-semibold'
+                      : 'bg-white/[0.03] text-[#A89BB2] border border-white/10 hover:text-white'
                   }`}
                 >
                   {f}
@@ -316,7 +324,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             <select
               value={studentInput.Medu}
               onChange={(e) => updateField('Medu', Number(e.target.value))}
-              className="w-full px-3.5 py-2 rounded-full bg-white/[0.05] border border-white/12 font-medium text-white focus:outline-none focus:border-[#F4B6D6]/65"
+              className="w-full px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/12 font-medium text-white focus:outline-none focus:border-white/30"
             >
               {[0, 1, 2, 3, 4].map((lvl) => (
                 <option key={lvl} value={lvl}>
@@ -333,7 +341,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             <select
               value={studentInput.Fedu}
               onChange={(e) => updateField('Fedu', Number(e.target.value))}
-              className="w-full px-3.5 py-2 rounded-full bg-white/[0.05] border border-white/12 font-medium text-white focus:outline-none focus:border-[#F4B6D6]/65"
+              className="w-full px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/12 font-medium text-white focus:outline-none focus:border-white/30"
             >
               {[0, 1, 2, 3, 4].map((lvl) => (
                 <option key={lvl} value={lvl}>
@@ -353,10 +361,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 onClick={() =>
                   updateField('internet', studentInput.internet === 'yes' ? 'no' : 'yes')
                 }
-                className={`w-full py-2 rounded-full font-semibold border transition-all ${
+                className={`w-full py-2 rounded-full font-medium transition-all ${
                   studentInput.internet === 'yes'
-                    ? 'bg-[#4B2E42]/85 text-[#FAD8EA] border-[#F4B6D6]/55'
-                    : 'bg-white/[0.03] text-[#A89BB2] border-white/10'
+                    ? 'glass-pill-active font-semibold'
+                    : 'bg-white/[0.03] text-[#A89BB2] border border-white/10'
                 }`}
               >
                 {studentInput.internet === 'yes' ? 'Yes (Home)' : 'No'}
@@ -372,10 +380,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 onClick={() =>
                   updateField('schoolsup', studentInput.schoolsup === 'yes' ? 'no' : 'yes')
                 }
-                className={`w-full py-2 rounded-full font-semibold border transition-all ${
+                className={`w-full py-2 rounded-full font-medium transition-all ${
                   studentInput.schoolsup === 'yes'
-                    ? 'bg-[#4B2E42]/85 text-[#FAD8EA] border-[#F4B6D6]/55'
-                    : 'bg-white/[0.03] text-[#A89BB2] border-white/10'
+                    ? 'glass-pill-active font-semibold'
+                    : 'bg-white/[0.03] text-[#A89BB2] border border-white/10'
                 }`}
               >
                 {studentInput.schoolsup === 'yes' ? 'Yes (Extra)' : 'No'}
@@ -388,32 +396,32 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
           type="button"
           onClick={() => onRunPredict()}
           disabled={isPredicting}
-          className="w-full py-3.5 rounded-full bg-[#F4B6D6] hover:bg-[#FAD4E8] text-[#17101C] text-sm font-display font-semibold flex items-center justify-center gap-2 transition-all shadow-[0_10px_30px_rgba(244,182,214,0.25)] disabled:opacity-50"
+          className="glass-cta w-full py-3.5 rounded-full text-sm font-display font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
         >
           <Play className="w-4 h-4 fill-current" />
           <span>{isPredicting ? 'Executing Python Model...' : 'Predict Final Grade (G3)'}</span>
         </button>
       </div>
 
-      {/* Right Column: Live ML Prediction Result, Gauge, Factors & Improvement Plan */}
+      {/* Right Column: Live ML Prediction Result, Gauge, What-If Simulator & Improvement Plan */}
       <div className="xl:col-span-6 space-y-5">
         {prediction ? (
           <div className="glass-shell rounded-[26px] p-6 space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
               <div>
-                <div className="text-xs text-[#9E90A8]">
+                <div className="text-xs text-[#95899E]">
                   Active Model: {prediction.selectedModelName}
                 </div>
-                <h3 className="text-xl font-display font-bold text-white mt-0.5">
+                <h3 className="text-xl font-display font-semibold text-[#FAF6FA] mt-0.5">
                   {prediction.classification.category}
                 </h3>
               </div>
 
               <div className="text-right text-xs tabular-nums">
-                <div className="text-[#9E90A8]">vs Cohort Avg ({prediction.cohortAverage}/20)</div>
+                <div className="text-[#95899E]">vs Cohort Avg ({prediction.cohortAverage}/20)</div>
                 <div
-                  className={`font-mono font-bold text-sm ${
-                    prediction.deltaVsCohort >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  className={`font-mono font-semibold text-sm ${
+                    prediction.deltaVsCohort >= 0 ? 'text-[#B5CBBF]' : 'text-[#D4A3B4]'
                   }`}
                 >
                   {prediction.deltaVsCohort >= 0 ? '+' : ''}
@@ -422,47 +430,102 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
               </div>
             </div>
 
-            {/* Gauge + Cross-Model Consensus */}
+            {/* Gauge + 4-Model Consensus */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
               <div className="sm:col-span-7 flex justify-center">
                 <GradeGauge score={prediction.predictedGrade} />
               </div>
 
-              <div className="sm:col-span-5 space-y-2.5 glass-subcard rounded-[20px] p-4">
-                <div className="text-xs font-semibold text-[#F4B6D6]">
-                  Cross-Model Consensus
+              <div className="sm:col-span-5 space-y-2 glass-subcard rounded-[20px] p-4">
+                <div className="text-xs font-semibold text-[#EAD0DF]">
+                  4-Model Consensus
                 </div>
                 {(
                   [
                     ['random_forest', 'Random Forest'],
-                    ['linear_regression', 'Linear Regression'],
+                    ['gradient_boosting', 'Grad. Boosting'],
+                    ['linear_regression', 'Linear Reg.'],
                     ['decision_tree', 'Decision Tree'],
                   ] as const
                 ).map(([k, label]) => (
                   <div
                     key={k}
-                    className="flex items-center justify-between text-xs py-1 border-b border-white/[0.06] last:border-0"
+                    className="flex items-center justify-between text-xs py-1 border-b border-white/[0.05] last:border-0"
                   >
                     <span
                       className={
                         k === prediction.selectedModelKey
-                          ? 'text-white font-semibold'
-                          : 'text-[#9E90A8]'
+                          ? 'text-[#FAF6FA] font-semibold'
+                          : 'text-[#95899E]'
                       }
                     >
                       {label}
                     </span>
-                    <span className="font-mono tabular-nums font-semibold text-white">
-                      {prediction.allModelPredictions[k].toFixed(2)} / 20
+                    <span className="font-mono tabular-nums font-medium text-[#FAF6FA]">
+                      {prediction.allModelPredictions[k]?.toFixed(2)} / 20
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* NEW FEATURE: Interactive What-If Counterfactual Sensitivity Chart */}
+            {prediction.whatIfStudy && prediction.whatIfStudy.length > 0 && (
+              <div className="glass-subcard rounded-[20px] p-4 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-3.5 h-3.5 text-[#E6CCD9]" />
+                    <h4 className="text-xs font-semibold text-[#FAF6FA]">
+                      Counterfactual What-If Sensitivity (Holding Other Attributes Fixed)
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-1 p-0.5 rounded-full bg-white/[0.04] border border-white/10 text-[10.5px]">
+                    <button
+                      type="button"
+                      onClick={() => setWhatIfTab('study')}
+                      className={`px-2.5 py-1 rounded-full transition-all ${
+                        whatIfTab === 'study' ? 'glass-pill-active font-medium' : 'text-[#95899E]'
+                      }`}
+                    >
+                      Vary Study Hours
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWhatIfTab('absences')}
+                      className={`px-2.5 py-1 rounded-full transition-all ${
+                        whatIfTab === 'absences' ? 'glass-pill-active font-medium' : 'text-[#95899E]'
+                      }`}
+                    >
+                      Vary Absences
+                    </button>
+                  </div>
+                </div>
+
+                <SculptedBarChart
+                  data={
+                    whatIfTab === 'study'
+                      ? prediction.whatIfStudy.map((w) => ({
+                          label: w.label,
+                          value: w.value,
+                          active: w.active,
+                          subtext: `Projected G3: ${w.value}/20`,
+                        }))
+                      : prediction.whatIfAbsences.map((w) => ({
+                          label: w.label,
+                          value: w.value,
+                          subtext: `Projected G3 at ${w.label}: ${w.value}/20`,
+                        }))
+                  }
+                  maxVal={20}
+                  height={175}
+                  capsuleLabels={true}
+                />
+              </div>
+            )}
+
             {/* Factors Influencing This Prediction */}
             <div>
-              <h4 className="text-sm font-display font-semibold text-white mb-2.5">
+              <h4 className="text-sm font-display font-semibold text-[#FAF6FA] mb-2.5">
                 Factors Influencing This Prediction (vs Cohort Mean)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -472,17 +535,17 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                     className="glass-subcard rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2"
                   >
                     <div className="min-w-0">
-                      <div className="text-xs font-medium text-white truncate">{f.label}</div>
-                      <div className="text-[11px] text-[#9E90A8] font-mono tabular-nums">
+                      <div className="text-xs font-medium text-[#F5EFF7] truncate">{f.label}</div>
+                      <div className="text-[11px] text-[#95899E] font-mono tabular-nums">
                         Input: {String(f.studentValue)} · Avg: {f.cohortMean}
                       </div>
                     </div>
                     <div
-                      className={`flex items-center gap-0.5 text-xs font-mono tabular-nums font-semibold shrink-0 ${
+                      className={`flex items-center gap-0.5 text-xs font-mono tabular-nums font-medium shrink-0 ${
                         f.impact > 0.05
-                          ? 'text-emerald-400'
+                          ? 'text-[#B5CBBF]'
                           : f.impact < -0.05
-                          ? 'text-rose-400'
+                          ? 'text-[#D4A3B4]'
                           : 'text-[#A89BB2]'
                       }`}
                     >
@@ -500,8 +563,8 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             {/* Personalized Academic Improvement Suggestions */}
             <div>
               <div className="flex items-center gap-2 mb-2.5">
-                <Lightbulb className="w-4 h-4 text-[#F4B6D6]" />
-                <h4 className="text-sm font-display font-semibold text-white">
+                <Lightbulb className="w-4 h-4 text-[#E6CCD9]" />
+                <h4 className="text-sm font-display font-semibold text-[#FAF6FA]">
                   Personalized Academic Improvement Plan
                 </h4>
               </div>
@@ -509,10 +572,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 {prediction.suggestions.map((s, idx) => (
                   <div key={idx} className="glass-subcard rounded-2xl p-3.5">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-xs font-semibold text-[#F4B6D6]">{s.title}</span>
-                      <span className="text-[11px] font-mono text-emerald-400">{s.impact}</span>
+                      <span className="text-xs font-semibold text-[#EAD0DF]">{s.title}</span>
+                      <span className="text-[11px] font-mono text-[#B5CBBF]">{s.impact}</span>
                     </div>
-                    <p className="text-xs text-[#C7B9D1] leading-relaxed">{s.detail}</p>
+                    <p className="text-xs text-[#C4B8CD] leading-relaxed">{s.detail}</p>
                   </div>
                 ))}
               </div>
@@ -547,17 +610,18 @@ export const InsightsPage: React.FC<InsightsProps> = ({
 
   return (
     <div className="space-y-5">
-      {/* Selector Strip */}
       <div className="glass-shell rounded-[22px] p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {(['random_forest', 'linear_regression', 'decision_tree'] as ModelKey[]).map((k) => (
+          {(
+            ['random_forest', 'gradient_boosting', 'linear_regression', 'decision_tree'] as ModelKey[]
+          ).map((k) => (
             <button
               key={k}
               onClick={() => onSelectModel(k)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 selectedModel === k
-                  ? 'bg-[#F4B6D6] text-[#17101C]'
-                  : 'bg-white/[0.04] border border-white/10 text-[#C7B9D1] hover:text-white'
+                  ? 'glass-pill-active font-semibold'
+                  : 'bg-white/[0.03] border border-white/[0.08] text-[#C7B9D1] hover:text-white'
               }`}
             >
               {evaluation.models[k].name}
@@ -565,19 +629,19 @@ export const InsightsPage: React.FC<InsightsProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center p-1 rounded-full bg-white/[0.04] border border-white/10">
+        <div className="flex items-center p-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
           <button
             onClick={() => onToggleIncludeGrades(true)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              includeGrades ? 'bg-[#F4B6D6] text-[#17101C]' : 'text-[#A89BB2] hover:text-white'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+              includeGrades ? 'glass-pill-active font-semibold' : 'text-[#A89BB2] hover:text-white'
             }`}
           >
             With G1 & G2
           </button>
           <button
             onClick={() => onToggleIncludeGrades(false)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              !includeGrades ? 'bg-[#F4B6D6] text-[#17101C]' : 'text-[#A89BB2] hover:text-white'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+              !includeGrades ? 'glass-pill-active font-semibold' : 'text-[#A89BB2] hover:text-white'
             }`}
           >
             Without G1 & G2
@@ -585,19 +649,18 @@ export const InsightsPage: React.FC<InsightsProps> = ({
         </div>
       </div>
 
-      {/* Actual vs Predicted + Residual Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-7 glass-shell rounded-[24px] p-6">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-display font-semibold text-white">
+              <h3 className="text-base font-display font-semibold text-[#FAF6FA]">
                 Actual vs Predicted G3 — {activeModel.name}
               </h3>
-              <p className="text-xs text-[#9E90A8]">
+              <p className="text-xs text-[#95899E]">
                 Unseen test split (n = {evaluation.testSize}) · Hover points to inspect student residuals
               </p>
             </div>
-            <span className="text-xs font-mono tabular-nums text-[#F4B6D6]">
+            <span className="text-xs font-mono tabular-nums text-[#EAD0DF]">
               R² = {activeModel.testMetrics.r2.toFixed(3)}
             </span>
           </div>
@@ -607,10 +670,10 @@ export const InsightsPage: React.FC<InsightsProps> = ({
         <div className="lg:col-span-5 glass-shell rounded-[24px] p-6">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-base font-display font-semibold text-white">
-                Residual Error Distribution
+              <h3 className="text-base font-display font-semibold text-[#FAF6FA]">
+                Residual Error Frosted Histogram
               </h3>
-              <p className="text-xs text-[#9E90A8]">
+              <p className="text-xs text-[#95899E]">
                 Mean error: {activeModel.residualMean} · Std: {activeModel.residualStd}
               </p>
             </div>
@@ -622,36 +685,139 @@ export const InsightsPage: React.FC<InsightsProps> = ({
         </div>
       </div>
 
-      {/* Full Ranked Feature Importance */}
       <div className="glass-shell rounded-[24px] p-6">
         <div className="mb-4">
-          <h3 className="text-base font-display font-semibold text-white">
+          <h3 className="text-base font-display font-semibold text-[#FAF6FA]">
             Complete Feature Importance Breakdown — {activeModel.name}
           </h3>
-          <p className="text-xs text-[#9E90A8]">
+          <p className="text-xs text-[#95899E]">
             Normalized relative contribution of every input feature on test-set grade predictions
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4">
           <FeatureImportanceBars items={activeModel.featureImportance} />
-          <div className="glass-subcard rounded-2xl p-5 space-y-3 text-xs text-[#C7B9D1] leading-relaxed">
-            <h4 className="text-sm font-display font-semibold text-[#F4B6D6]">
+          <div className="glass-subcard rounded-2xl p-5 space-y-3 text-xs text-[#C4B8CD] leading-relaxed">
+            <h4 className="text-sm font-display font-semibold text-[#EAD0DF]">
               Diagnostic Interpretation
             </h4>
             <p>
-              <strong className="text-white">1. Prior Academic Momentum vs Habits:</strong>{' '}
+              <strong className="text-[#FAF6FA]">1. Prior Academic Momentum vs Habits:</strong>{' '}
               {includeGrades
                 ? 'When G1 and G2 are available, second-period performance (G2) dominates predictive power because final assessments build cumulatively on mid-year mastery.'
                 : 'When G1 and G2 are excluded, Previous Class Failures, Study Time, Family Education (Medu/Fedu), and School Absences carry the primary predictive signal.'}
             </p>
             <p>
-              <strong className="text-white">2. Residual Symmetry:</strong> Residuals cluster tightly around{' '}
-              <span className="font-mono text-white">{activeModel.residualMean}</span> grade points. Outliers correspond primarily to UCI students who attended mid-terms (G2 = 8–10) but recorded 0 on the final G3 exam.
+              <strong className="text-[#FAF6FA]">2. 5-Fold Cross-Validation Stability:</strong>{' '}
+              Across 5 training folds, {activeModel.name} achieves R² ={' '}
+              <span className="font-mono text-white">
+                {activeModel.cvMetrics.meanR2.toFixed(3)} ± {activeModel.cvMetrics.stdR2.toFixed(3)}
+              </span>
+              , confirming stable generalization across cohort partitions.
             </p>
             <p>
-              <strong className="text-white">3. Zero Data Leakage Guarantee:</strong> Test metrics are computed strictly on {evaluation.testSize} held-out students unseen during imputation, scaling, or tree split selection.
+              <strong className="text-[#FAF6FA]">3. Zero Data Leakage Guarantee:</strong> Test metrics are computed strictly on {evaluation.testSize} held-out students unseen during imputation, scaling, or tree split selection.
             </p>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * NEW PAGE: Cohort Early-Warning Risk Radar & Intervention Simulator
+ */
+export const RiskRadarPage: React.FC<{
+  evaluation: EvaluationPayload;
+  onSimulateStudent: (student: AtRiskStudent) => void;
+}> = ({ evaluation, onSimulateStudent }) => {
+  return (
+    <div className="space-y-5">
+      <div className="glass-kpi rounded-[24px] p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-full bg-[#EFE0E8] text-[#17111C] flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs text-[#DFC0D1] font-medium">
+              Early-Warning Academic Intervention Engine · {evaluation.bestModelName}
+            </div>
+            <h2 className="text-lg font-display font-semibold text-[#FAF6FA] mt-0.5">
+              {evaluation.atRiskCount} Students Projected Below Pass Threshold (G3 &lt; 10/20)
+            </h2>
+            <p className="text-xs text-[#9E93A6] mt-0.5 max-w-3xl">
+              Prioritized by recoverable pass proximity so advisors can focus tutoring and attendance outreach where 1–3 grade points flip an outcome from fail to pass.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => exportRowsToCsv(evaluation.atRiskSample, 'at_risk_intervention_priority.csv')}
+          className="glass-cta px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 whitespace-nowrap"
+        >
+          <FileDown className="w-3.5 h-3.5" />
+          <span>Export Priority List (CSV)</span>
+        </button>
+      </div>
+
+      <div className="glass-shell rounded-[26px] p-6">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-white/[0.035] text-[#C7B9D1] border-b border-white/[0.08]">
+                <th className="py-3 px-3.5 font-semibold">Row #</th>
+                <th className="py-3 px-3.5 font-semibold">Profile</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Study Cat</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Failures</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Absences</th>
+                <th className="py-3 px-3.5 font-semibold text-right">G1 / G2</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Projected G3</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Gap to Pass</th>
+                <th className="py-3 px-3.5 font-semibold text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.045]">
+              {evaluation.atRiskSample.map((st) => (
+                <tr key={st.rowNumber} className="hover:bg-white/[0.035] transition-colors">
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-[#95899E]">
+                    #{st.rowNumber}
+                  </td>
+                  <td className="py-2.5 px-3.5 text-[#EFE9F4]">
+                    {st.school} · {st.sex === 'F' ? 'Female' : 'Male'} · {st.age}y
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#D4C9DC]">
+                    {STUDY_LABELS[st.studytime] || st.studytime}
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#D4C9DC]">
+                    {st.failures}
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#D4C9DC]">
+                    {st.absences}d
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#D4C9DC]">
+                    {st.G1} → {st.G2}
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right font-semibold text-[#D4A3B4]">
+                    {st.predictedG3.toFixed(2)} / 20
+                  </td>
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#EAD0DF]">
+                    +{st.gapToPass.toFixed(2)} pts
+                  </td>
+                  <td className="py-2.5 px-3.5 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onSimulateStudent(st)}
+                      className="px-3 py-1 rounded-full glass-pill-active text-[11px] font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Simulate Lift</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -680,15 +846,15 @@ export const PythonSourceModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl rounded-[26px] bg-[#130E18] border border-white/15 text-white shadow-2xl overflow-hidden flex flex-col max-h-[86vh]">
+      <div className="w-full max-w-5xl rounded-[26px] bg-[#120E17] border border-white/15 text-white shadow-2xl overflow-hidden flex flex-col max-h-[86vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <Code2 className="w-5 h-5 text-[#F4B6D6]" />
+            <Code2 className="w-5 h-5 text-[#E6CCD9]" />
             <div>
-              <h3 className="text-base font-display font-bold">
+              <h3 className="text-base font-display font-semibold">
                 Modular Python ML & Streamlit Source Files
               </h3>
-              <p className="text-xs text-[#9E90A8]">
+              <p className="text-xs text-[#95899E]">
                 Live backend executes these Python modules (`data_loader.py`, `preprocessing.py`, `model_training.py`, `prediction.py`)
               </p>
             </div>
@@ -701,15 +867,15 @@ export const PythonSourceModal: React.FC<{
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 bg-white/[0.03] border-b border-white/10">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-3 bg-white/[0.025] border-b border-white/10">
           <div className="flex flex-wrap items-center gap-1.5">
             {files.map((f, idx) => (
               <button
                 key={f.name}
                 onClick={() => setActiveIdx(idx)}
-                className={`px-3 py-1.5 rounded-full text-xs font-mono transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-mono transition-all ${
                   idx === activeIdx
-                    ? 'bg-[#F4B6D6] text-[#17101C] font-semibold'
+                    ? 'glass-pill-active font-semibold'
                     : 'bg-white/5 text-[#C7B9D1] hover:bg-white/10'
                 }`}
               >
@@ -729,7 +895,7 @@ export const PythonSourceModal: React.FC<{
           )}
         </div>
 
-        <pre className="p-6 overflow-auto text-xs font-mono text-[#E8DCEB] leading-relaxed flex-1">
+        <pre className="p-6 overflow-auto text-xs font-mono text-[#E6DCEB] leading-relaxed flex-1">
           {current?.content || 'Loading Python source files...'}
         </pre>
       </div>

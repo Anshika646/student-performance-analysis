@@ -4,9 +4,14 @@ export type PageId =
   | 'eda'
   | 'training'
   | 'prediction'
-  | 'insights';
+  | 'insights'
+  | 'risk';
 
-export type ModelKey = 'random_forest' | 'linear_regression' | 'decision_tree';
+export type ModelKey =
+  | 'random_forest'
+  | 'gradient_boosting'
+  | 'linear_regression'
+  | 'decision_tree';
 
 export interface ColumnStat {
   column: string;
@@ -79,11 +84,34 @@ export interface ModelReport {
   name: string;
   testMetrics: RegressionMetrics;
   trainMetrics: RegressionMetrics;
+  cvMetrics: {
+    meanR2: number;
+    stdR2: number;
+  };
   actualVsPredicted: ScatterPoint[];
   residualHistogram: ResidualBin[];
   residualMean: number;
   residualStd: number;
   featureImportance: FeatureImportanceItem[];
+}
+
+export interface AtRiskStudent {
+  rowNumber: number;
+  school: string;
+  sex: 'F' | 'M';
+  age: number;
+  studytime: number;
+  failures: number;
+  absences: number;
+  Medu: number;
+  Fedu: number;
+  internet: 'yes' | 'no';
+  schoolsup: 'yes' | 'no';
+  G1: number;
+  G2: number;
+  actualG3: number;
+  predictedG3: number;
+  gapToPass: number;
 }
 
 export interface EvaluationPayload {
@@ -100,6 +128,8 @@ export interface EvaluationPayload {
   bestModelKey: ModelKey;
   bestModelName: string;
   bestModelExplanation: string;
+  atRiskCount: number;
+  atRiskSample: AtRiskStudent[];
   models: Record<ModelKey, ModelReport>;
 }
 
@@ -133,6 +163,12 @@ export interface ImprovementSuggestion {
   detail: string;
 }
 
+export interface WhatIfPoint {
+  label: string;
+  value: number;
+  active?: boolean;
+}
+
 export interface PredictionPayload {
   selectedModelKey: ModelKey;
   selectedModelName: string;
@@ -149,6 +185,8 @@ export interface PredictionPayload {
   };
   allModelPredictions: Record<ModelKey, number>;
   influencingFactors: InfluencingFactor[];
+  whatIfStudy: WhatIfPoint[];
+  whatIfAbsences: WhatIfPoint[];
   suggestions: ImprovementSuggestion[];
 }
 

@@ -1,15 +1,15 @@
 """
 model_training.py
 -----------------
-Trains and evaluates three supervised regression algorithms on the UCI Student
+Trains and evaluates four supervised regression algorithms on the UCI Student
 Performance dataset to predict G3 (final grade, 0-20):
 1. Linear Regression (Ordinary Least Squares on standardized training features)
-2. Decision Tree Regressor (CART variance-reduction recursive binary partitioning)
-3. Random Forest Regressor (Bootstrap aggregating ensemble of CART trees with random feature subsampling)
+2. Random Forest Regressor (Bootstrap aggregating ensemble of CART trees)
+3. Decision Tree Regressor (CART variance-reduction recursive binary partitioning)
+4. Gradient Boosting Regressor (Stagewise additive regression trees fitting residuals)
 
-Automatically integrates with Scikit-learn when installed locally (e.g. via `streamlit run app.py`)
-and provides an exact mathematical pure-Python implementation when running in lightweight
-cloud containers without native C extensions.
+Includes 5-Fold Cross-Validation strictly within the training split (zero test-set leakage),
+held-out test evaluation (R², MAE, RMSE), residual diagnostics, and feature importances.
 """
 
 import math
@@ -20,8 +20,12 @@ from preprocessing import FEATURE_LABELS, StudentPreprocessor, get_feature_list,
 
 try:
     import numpy as np  # type: ignore
-    from sklearn.ensemble import RandomForestRegressor as SklearnRF  # type: ignore
+    from sklearn.ensemble import (  # type: ignore
+        GradientBoostingRegressor as SklearnGBR,
+        RandomForestRegressor as SklearnRF,
+    )
     from sklearn.linear_model import LinearRegression as SklearnLR  # type: ignore
+    from sklearn.model_selection import KFold  # type: ignore
     from sklearn.tree import DecisionTreeRegressor as SklearnDT  # type: ignore
 
     HAS_SKLEARN = True
@@ -30,7 +34,7 @@ except ImportError:
 
 
 # ============================================================================
-# Exact Mathematical Regression Implementations (Fallback when sklearn absent)
+# Exact Mathematical Regression Implementations
 # ============================================================================
 
 class PureLinearRegression:
@@ -43,8 +47,6 @@ class PureLinearRegression:
     def fit(self, X: List[List[float]], y: List[float]) -> "PureLinearRegression":
         n = len(X)
         p = len(X[0])
-        # Augment X with bias column at index 0
-        # Normal equations: (X_aug^T X_aug + reg * I) beta = X_aug^T y
         dim = p + 1
         A = [[0.0] * dim for _ in range(dim)]
         b = [0.0] * dim
@@ -62,7 +64,7 @@ class PureLinearRegression:
             for k in range(j):
                 A[j][k] = A[k][j]
             if j > 0:
-                A[j][j] += 1e-6  # Tiny Tikhonov stabilizer for collinear edge cases
+                A[j][j] += 1e-6
 
         beta = _solve_linear_system(A, b)
         self.intercept_ = beta[0]
@@ -114,10 +116,7 @@ class _CARTNode:
 
 
 class PureDecisionTreeRegressor:
-    """
-    Exact CART Regression Tree minimizing Mean Squared Error (variance reduction)
-    with impurity-based feature importance tracking.
-    """
+    """Exact CART Regression Tree minimizing Mean Squared Error."""
 
     def __init__(
         self,
@@ -232,9 +231,7 @@ class PureDecisionTreeRegressor:
 
 
 class PureRandomForestRegressor:
-    """
-    Bootstrap Aggregating (Bagging) + Random Subspace Ensemble of CART Regression Trees.
-    """
+    """Bootstrap Aggregating + Random Subspace Ensemble of CART Regression Trees."""
 
     def __init__(
         self,
@@ -293,8 +290,69 @@ class PureRandomForestRegressor:
         ]
 
 
+class PureGradientBoostingRegressor:
+    """
+    Stagewise Additive Gradient Boosted Regression Trees minimizing Squared Error Loss
+    via sequential pseudo-residual fitting: F_m(x) = F_{m-1}(x) + lr * h_m(x).
+    """
+
+    def __init__(
+        self,
+        n_estimators: int = 35,
+        learning_rate: float = 0.12,
+        max_depth: int = 3,
+        min_samples_leaf: int = 4,
+        random_state: int = 42,
+    ):
+        self.n_estimators = n_estimators
+        self.learning_rate = learning_rate
+        self.max_depth = max_depth
+        self.min_samples_leaf = min_samples_leaf
+        self.random_state = random_state
+        self.init_mean_: float = 0.0
+        self.trees: List[PureDecisionTreeRegressor] = []
+        self.feature_importances_: List[float] = []
+
+    def fit(self, X: List[List[float]], y: List[float]) -> "PureGradientBoostingRegressor":
+        n_samples = len(X)
+        n_features = len(X[0])
+        self.init_mean_ = sum(y) / n_samples
+        current_pred = [self.init_mean_] * n_samples
+        self.trees = []
+        agg_imp = [0.0] * n_features
+
+        for m in range(self.n_estimators):
+            residuals = [y[i] - current_pred[i] for i in range(n_samples)]
+            tree = PureDecisionTreeRegressor(
+                max_depth=self.max_depth,
+                min_samples_split=max(6, self.min_samples_leaf * 2),
+                min_samples_leaf=self.min_samples_leaf,
+                random_state=self.random_state + m * 13,
+            ).fit(X, residuals)
+            step_pred = tree.predict(X)
+            for i in range(n_samples):
+                current_pred[i] += self.learning_rate * step_pred[i]
+            self.trees.append(tree)
+            for j, imp in enumerate(tree.feature_importances_):
+                agg_imp[j] += imp
+
+        total_imp = sum(agg_imp)
+        self.feature_importances_ = (
+            [v / total_imp for v in agg_imp] if total_imp > 0 else [1.0 / n_features] * n_features
+        )
+        return self
+
+    def predict(self, X: List[List[float]]) -> List[float]:
+        out = [self.init_mean_] * len(X)
+        for tree in self.trees:
+            t_preds = tree.predict(X)
+            for i in range(len(X)):
+                out[i] += self.learning_rate * t_preds[i]
+        return out
+
+
 # ============================================================================
-# Evaluation Metrics & Unified Training Pipeline
+# Evaluation Metrics, K-Fold Cross Validation & Unified Training Pipeline
 # ============================================================================
 
 def compute_regression_metrics(y_true: List[float], y_pred: List[float]) -> Dict[str, float]:
@@ -311,6 +369,87 @@ def compute_regression_metrics(y_true: List[float], y_pred: List[float]) -> Dict
         "mae": round(mae, 4),
         "rmse": round(rmse, 4),
     }
+
+
+def _compute_5fold_cv(
+    train_rows: List[Dict[str, Any]],
+    features: List[str],
+    random_state: int,
+    max_depth: int,
+) -> Dict[str, Dict[str, float]]:
+    """
+    Run leakage-free 5-Fold Cross-Validation strictly inside train_rows.
+    Each fold fits its own StudentPreprocessor strictly on the 4 training folds.
+    """
+    n = len(train_rows)
+    k = 5
+    idxs = list(range(n))
+    rng = random.Random(random_state + 99)
+    rng.shuffle(idxs)
+    fold_size = max(1, n // k)
+
+    scores: Dict[str, List[float]] = {
+        "linear_regression": [],
+        "random_forest": [],
+        "decision_tree": [],
+        "gradient_boosting": [],
+    }
+
+    for fold in range(k):
+        start = fold * fold_size
+        end = n if fold == k - 1 else (fold + 1) * fold_size
+        val_set = set(idxs[start:end])
+        tr_sub = [train_rows[i] for i in range(n) if i not in val_set]
+        va_sub = [train_rows[i] for i in range(n) if i in val_set]
+        if len(va_sub) < 4 or len(tr_sub) < 10:
+            continue
+
+        prep = StudentPreprocessor(features=features).fit(tr_sub)
+        X_tr_s = prep.transform_standardized(tr_sub)
+        X_va_s = prep.transform_standardized(va_sub)
+        X_tr_r = prep.transform_raw_numeric(tr_sub)
+        X_va_r = prep.transform_raw_numeric(va_sub)
+        y_tr = [float(r["G3"]) for r in tr_sub]
+        y_va = [float(r["G3"]) for r in va_sub]
+
+        lr_p = [max(0.0, min(20.0, v)) for v in PureLinearRegression().fit(X_tr_s, y_tr).predict(X_va_s)]
+        rf_p = [
+            max(0.0, min(20.0, v))
+            for v in PureRandomForestRegressor(
+                n_estimators=10, max_depth=max_depth + 1, random_state=random_state + fold
+            )
+            .fit(X_tr_r, y_tr)
+            .predict(X_va_r)
+        ]
+        dt_p = [
+            max(0.0, min(20.0, v))
+            for v in PureDecisionTreeRegressor(max_depth=max_depth, random_state=random_state + fold)
+            .fit(X_tr_r, y_tr)
+            .predict(X_va_r)
+        ]
+        gb_p = [
+            max(0.0, min(20.0, v))
+            for v in PureGradientBoostingRegressor(
+                n_estimators=14, learning_rate=0.14, max_depth=3, random_state=random_state + fold
+            )
+            .fit(X_tr_r, y_tr)
+            .predict(X_va_r)
+        ]
+
+        scores["linear_regression"].append(compute_regression_metrics(y_va, lr_p)["r2"])
+        scores["random_forest"].append(compute_regression_metrics(y_va, rf_p)["r2"])
+        scores["decision_tree"].append(compute_regression_metrics(y_va, dt_p)["r2"])
+        scores["gradient_boosting"].append(compute_regression_metrics(y_va, gb_p)["r2"])
+
+    out: Dict[str, Dict[str, float]] = {}
+    for key, arr in scores.items():
+        if not arr:
+            out[key] = {"meanR2": 0.0, "stdR2": 0.0}
+        else:
+            m = sum(arr) / len(arr)
+            std = math.sqrt(sum((x - m) ** 2 for x in arr) / max(1, len(arr) - 1))
+            out[key] = {"meanR2": round(m, 4), "stdR2": round(std, 4)}
+    return out
 
 
 def build_residual_histogram(residuals: List[float], bins: int = 11) -> List[Dict[str, Any]]:
@@ -351,9 +490,9 @@ def train_and_evaluate_all_models(
     n_estimators: int = 40,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Execute leakage-free train/test split, fit preprocessing strictly on X_train,
-    train Linear Regression, Random Forest Regressor, and Decision Tree Regressor,
-    and return both serializable evaluation analytics and live fitted model objects.
+    Execute leakage-free train/test split, 5-fold cross-validation on X_train,
+    and test-set evaluation for Linear Regression, Random Forest, Decision Tree,
+    and Gradient Boosting Regressors.
     """
     features = get_feature_list(include_grades=include_grades, available_columns=available_columns)
 
@@ -371,6 +510,8 @@ def train_and_evaluate_all_models(
     y_train = [float(r["G3"]) for r in train_rows]
     y_test = [float(r["G3"]) for r in test_rows]
 
+    cv_summary = _compute_5fold_cv(train_rows, features, int(random_state), int(max_depth))
+
     models_runtime: Dict[str, Any] = {}
     models_report: Dict[str, Any] = {}
 
@@ -381,9 +522,7 @@ def train_and_evaluate_all_models(
         X_te_raw_np = np.array(X_test_raw)
         y_tr_np = np.array(y_train)
 
-        # 1. Linear Regression
-        lr = SklearnLR()
-        lr.fit(X_tr_std_np, y_tr_np)
+        lr = SklearnLR().fit(X_tr_std_np, y_tr_np)
         lr_train_pred = [float(x) for x in lr.predict(X_tr_std_np)]
         lr_test_pred = [float(x) for x in lr.predict(X_te_std_np)]
         abs_coefs = [abs(float(c)) for c in lr.coef_]
@@ -391,32 +530,38 @@ def train_and_evaluate_all_models(
         lr_imp = [c / coef_sum for c in abs_coefs]
         lr_signed_coefs = [float(c) for c in lr.coef_]
 
-        # 2. Random Forest Regressor
         rf = SklearnRF(
             n_estimators=int(n_estimators),
             max_depth=int(max_depth) + 2,
             min_samples_split=6,
             min_samples_leaf=2,
             random_state=int(random_state),
-        )
-        rf.fit(X_tr_raw_np, y_tr_np)
+        ).fit(X_tr_raw_np, y_tr_np)
         rf_train_pred = [float(x) for x in rf.predict(X_tr_raw_np)]
         rf_test_pred = [float(x) for x in rf.predict(X_te_raw_np)]
         rf_imp = [float(x) for x in rf.feature_importances_]
 
-        # 3. Decision Tree Regressor
         dt = SklearnDT(
             max_depth=int(max_depth),
             min_samples_split=8,
             min_samples_leaf=3,
             random_state=int(random_state),
-        )
-        dt.fit(X_tr_raw_np, y_tr_np)
+        ).fit(X_tr_raw_np, y_tr_np)
         dt_train_pred = [float(x) for x in dt.predict(X_tr_raw_np)]
         dt_test_pred = [float(x) for x in dt.predict(X_te_raw_np)]
         dt_imp = [float(x) for x in dt.feature_importances_]
+
+        gb = SklearnGBR(
+            n_estimators=max(25, int(n_estimators)),
+            learning_rate=0.12,
+            max_depth=3,
+            min_samples_leaf=4,
+            random_state=int(random_state),
+        ).fit(X_tr_raw_np, y_tr_np)
+        gb_train_pred = [float(x) for x in gb.predict(X_tr_raw_np)]
+        gb_test_pred = [float(x) for x in gb.predict(X_te_raw_np)]
+        gb_imp = [float(x) for x in gb.feature_importances_]
     else:
-        # Exact mathematical engine
         lr = PureLinearRegression().fit(X_train_std, y_train)
         lr_train_pred = lr.predict(X_train_std)
         lr_test_pred = lr.predict(X_test_std)
@@ -446,6 +591,17 @@ def train_and_evaluate_all_models(
         dt_test_pred = dt.predict(X_test_raw)
         dt_imp = dt.feature_importances_
 
+        gb = PureGradientBoostingRegressor(
+            n_estimators=max(25, int(n_estimators)),
+            learning_rate=0.12,
+            max_depth=3,
+            min_samples_leaf=4,
+            random_state=int(random_state),
+        ).fit(X_train_raw, y_train)
+        gb_train_pred = gb.predict(X_train_raw)
+        gb_test_pred = gb.predict(X_test_raw)
+        gb_imp = gb.feature_importances_
+
     models_runtime = {
         "preprocessor": preprocessor,
         "features": features,
@@ -453,13 +609,15 @@ def train_and_evaluate_all_models(
         "lr": lr,
         "rf": rf,
         "dt": dt,
+        "gb": gb,
         "lr_signed_coefs": lr_signed_coefs,
         "y_train_mean": sum(y_train) / len(y_train),
     }
 
     spec_list = [
-        ("linear_regression", "Linear Regression", lr_train_pred, lr_test_pred, lr_imp),
         ("random_forest", "Random Forest Regressor", rf_train_pred, rf_test_pred, rf_imp),
+        ("gradient_boosting", "Gradient Boosting Regressor", gb_train_pred, gb_test_pred, gb_imp),
+        ("linear_regression", "Linear Regression", lr_train_pred, lr_test_pred, lr_imp),
         ("decision_tree", "Decision Tree Regressor", dt_train_pred, dt_test_pred, dt_imp),
     ]
 
@@ -504,17 +662,20 @@ def train_and_evaluate_all_models(
             "name": name,
             "testMetrics": test_metrics,
             "trainMetrics": train_metrics,
+            "cvMetrics": cv_summary[key],
             "actualVsPredicted": scatter_points,
             "residualHistogram": build_residual_histogram(residuals),
             "residualMean": round(sum(residuals) / len(residuals), 3),
             "residualStd": round(
-                math.sqrt(sum((r - sum(residuals) / len(residuals)) ** 2 for r in residuals) / max(1, len(residuals) - 1)),
+                math.sqrt(
+                    sum((r - sum(residuals) / len(residuals)) ** 2 for r in residuals)
+                    / max(1, len(residuals) - 1)
+                ),
                 3,
             ),
             "featureImportance": feat_imp_sorted,
         }
 
-    # Rank models by Test R² (primary) and lowest Test RMSE (tie-breaker)
     ranked = sorted(
         models_report.values(),
         key=lambda m: (m["testMetrics"]["r2"], -m["testMetrics"]["rmse"]),
@@ -529,47 +690,77 @@ def train_and_evaluate_all_models(
         else "using background & study-habit features only (without G1 & G2)"
     )
 
-    if best["key"] == "random_forest":
-        why = (
-            f"{best['name']} achieves the strongest generalization {mode_desc} with a Test R² of "
-            f"{best['testMetrics']['r2']:.3f} and RMSE of {best['testMetrics']['rmse']:.2f} grade points "
-            f"(outperforming {runner_up['name']} at R² = {runner_up['testMetrics']['r2']:.3f}). "
-            f"By averaging {n_estimators} bootstrapped regression trees with random feature subsampling, "
-            f"it captures non-linear threshold effects (such as zero-grade dropout spikes and absence interactions) "
-            f"while suppressing single-tree variance."
-        )
-    elif best["key"] == "linear_regression":
-        why = (
-            f"{best['name']} leads on the held-out test split {mode_desc} with Test R² = "
-            f"{best['testMetrics']['r2']:.3f} and RMSE = {best['testMetrics']['rmse']:.2f} "
-            f"(ahead of {runner_up['name']} at R² = {runner_up['testMetrics']['r2']:.3f}). "
-            f"Because academic progression across periods exhibits a strong additive linear trend, "
-            f"regularized Ordinary Least Squares generalizes smoothly without partitioning noise."
-        )
-    else:
-        why = (
-            f"{best['name']} performs best on this test split {mode_desc} with Test R² = "
-            f"{best['testMetrics']['r2']:.3f} and RMSE = {best['testMetrics']['rmse']:.2f}, "
-            f"isolating sharp decision thresholds across the student cohort."
-        )
+    why = (
+        f"{best['name']} achieves the highest held-out accuracy {mode_desc} with Test R² = "
+        f"{best['testMetrics']['r2']:.3f}, RMSE = {best['testMetrics']['rmse']:.2f} pts, and "
+        f"5-Fold CV R² = {best['cvMetrics']['meanR2']:.3f} ± {best['cvMetrics']['stdR2']:.3f} "
+        f"(outperforming {runner_up['name']} at Test R² = {runner_up['testMetrics']['r2']:.3f}). "
+        f"Ensemble tree partitioning captures non-linear grade thresholds and absence interactions without test-set leakage."
+    )
+
+    # Also score the full cohort with the best model to power Cohort Early-Warning & Batch Export
+    X_all_std = preprocessor.transform_standardized(rows)
+    X_all_raw = preprocessor.transform_raw_numeric(rows)
+    best_key = best["key"]
+    best_obj = (
+        models_runtime["lr"]
+        if best_key == "linear_regression"
+        else models_runtime["gb"]
+        if best_key == "gradient_boosting"
+        else models_runtime["dt"]
+        if best_key == "decision_tree"
+        else models_runtime["rf"]
+    )
+    X_for_best = X_all_std if best_key == "linear_regression" else X_all_raw
+    raw_cohort_preds = (
+        [float(x) for x in best_obj.predict(np.array(X_for_best))]
+        if HAS_SKLEARN and hasattr(best_obj, "n_features_in_")
+        else best_obj.predict(X_for_best)
+    )
+
+    at_risk_students: List[Dict[str, Any]] = []
+    for idx, (r, pred_v) in enumerate(zip(rows, raw_cohort_preds)):
+        cp = round(max(0.0, min(20.0, pred_v)), 2)
+        actual_g3 = float(r.get("G3", 0))
+        if cp < 10.0:
+            at_risk_students.append({
+                "rowNumber": idx + 1,
+                "school": r.get("school", "GP"),
+                "sex": r.get("sex", "F"),
+                "age": int(float(r.get("age", 17))),
+                "studytime": int(float(r.get("studytime", 2))),
+                "failures": int(float(r.get("failures", 0))),
+                "absences": int(float(r.get("absences", 0))),
+                "Medu": int(float(r.get("Medu", 2))),
+                "Fedu": int(float(r.get("Fedu", 2))),
+                "internet": str(r.get("internet", "yes")),
+                "schoolsup": str(r.get("schoolsup", "no")),
+                "G1": int(float(r.get("G1", 8))),
+                "G2": int(float(r.get("G2", 8))),
+                "actualG3": int(round(actual_g3)),
+                "predictedG3": cp,
+                "gapToPass": round(10.0 - cp, 2),
+            })
+
+    # Sort at-risk students closest to recoverable pass margin first (e.g. predicted 7.0 - 9.9)
+    at_risk_students.sort(key=lambda s: abs(9.0 - s["predictedG3"]))
 
     evaluation_payload = {
         "includeGrades": include_grades,
         "modeLabel": "With G1 & G2 (Full Academic Trajectory)" if include_grades else "Without G1 & G2 (Habits & Demographics Only)",
-        "features": [
-            {"key": f, "label": FEATURE_LABELS.get(f, f)}
-            for f in features
-        ],
+        "features": [{"key": f, "label": FEATURE_LABELS.get(f, f)} for f in features],
         "trainSize": len(train_rows),
         "testSize": len(test_rows),
         "testSplitRatio": round(len(test_rows) / (len(train_rows) + len(test_rows)), 2),
         "randomState": int(random_state),
         "maxDepth": int(max_depth),
         "nEstimators": int(n_estimators),
-        "engineBackend": "scikit-learn" if HAS_SKLEARN else "python-cart-ols",
+        "engineBackend": "scikit-learn" if HAS_SKLEARN else "python-cart-ols-gbr",
         "bestModelKey": best["key"],
         "bestModelName": best["name"],
         "bestModelExplanation": why,
+        "atRiskCount": len(at_risk_students),
+        "atRiskSample": at_risk_students[:16],
         "models": models_report,
     }
 

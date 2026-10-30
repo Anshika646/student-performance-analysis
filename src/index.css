@@ -10,14 +10,14 @@
   html,
   body {
     font-family: var(--font-sans);
-    background-color: #0d0a10;
+    background-color: #0b090e;
     background-image:
-      radial-gradient(circle at 8% 4%, rgba(182, 96, 142, 0.20) 0%, rgba(18, 13, 22, 0) 38%),
-      radial-gradient(circle at 94% 52%, rgba(216, 130, 176, 0.14) 0%, rgba(18, 13, 22, 0) 36%),
-      radial-gradient(circle at 82% 96%, rgba(164, 92, 138, 0.18) 0%, rgba(13, 10, 16, 0) 42%),
-      linear-gradient(180deg, #120d16 0%, #0d0a10 55%, #0b080e 100%);
+      radial-gradient(circle at 10% 6%, rgba(168, 118, 146, 0.15) 0%, rgba(14, 11, 18, 0) 40%),
+      radial-gradient(circle at 92% 48%, rgba(186, 142, 168, 0.10) 0%, rgba(14, 11, 18, 0) 38%),
+      radial-gradient(circle at 78% 95%, rgba(145, 108, 134, 0.13) 0%, rgba(11, 9, 14, 0) 44%),
+      linear-gradient(180deg, #110d15 0%, #0b090e 58%, #09070c 100%);
     background-attachment: fixed;
-    color: #f7f2f9;
+    color: #f4eff6;
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -28,7 +28,7 @@
   h3,
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
   }
 
   .tabular-nums {
@@ -36,39 +36,75 @@
   }
 
   select option {
-    background-color: #19131f;
-    color: #f7f2f9;
+    background-color: #16121c;
+    color: #f4eff6;
   }
 }
 
-/* Sleek Dark Smoked-Glass Surface Utilities */
+/* Luxury Architectural Smoked-Glass Surfaces */
 .glass-shell {
-  background: linear-gradient(145deg, rgba(36, 26, 42, 0.62) 0%, rgba(20, 15, 25, 0.78) 100%);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.085);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.052) 0%,
+    rgba(28, 22, 34, 0.68) 42%,
+    rgba(16, 13, 21, 0.84) 100%
+  );
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 28px 72px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .glass-kpi {
   background:
-    radial-gradient(circle at 18% 16%, rgba(196, 110, 156, 0.16) 0%, transparent 58%),
-    linear-gradient(160deg, rgba(38, 29, 44, 0.72) 0%, rgba(21, 16, 26, 0.82) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+    radial-gradient(circle at 16% 14%, rgba(222, 178, 202, 0.11) 0%, transparent 60%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.058) 0%, rgba(20, 16, 26, 0.82) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.095);
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 18px 44px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .glass-subcard {
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.018) 100%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.055) 0%,
+    rgba(255, 255, 255, 0.016) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-pill-active {
+  background: linear-gradient(
+    180deg,
+    rgba(236, 202, 220, 0.24) 0%,
+    rgba(176, 132, 158, 0.13) 100%
+  );
+  border: 1px solid rgba(242, 214, 229, 0.38);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fbf8fc;
+}
+
+.glass-cta {
+  background: linear-gradient(180deg, #ecd8e4 0%, #cfb0c2 100%);
+  color: #16111b;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+.glass-cta:hover {
+  background: linear-gradient(180deg, #f4e5ee 0%, #dbc0d0 100%);
 }
 
 /* Subtle dark glass scrollbars */
@@ -80,9 +116,9 @@
   background: rgba(255, 255, 255, 0.02);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(233, 155, 195, 0.25);
+  background: rgba(218, 186, 204, 0.22);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(233, 155, 195, 0.48);
+  background: rgba(218, 186, 204, 0.42);
 }

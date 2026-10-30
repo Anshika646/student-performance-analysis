@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  AtRiskStudent,
   CohortFilters,
   DatasetPayload,
   EvaluationPayload,
@@ -29,6 +30,7 @@ import {
   InsightsPage,
   PredictionPage,
   PythonSourceModal,
+  RiskRadarPage,
 } from './components/PredictionAndInsights';
 
 const PAGE_META: Record<
@@ -59,21 +61,21 @@ const PAGE_META: Record<
     heroTop: 'Exploratory',
     heroAccent: 'Analysis',
     subtitle:
-      'Ten interactive cohort visualizations updating dynamically across demographic and study filters.',
+      'Interactive frosted-glass cohort visualizations updating dynamically across demographic and study filters.',
   },
   training: {
     navLabel: 'ML Training',
     heroTop: 'Supervised',
     heroAccent: 'Models',
     subtitle:
-      'Train and compare Linear Regression, Random Forest, and Decision Tree Regressors without leakage.',
+      'Compare Random Forest, Gradient Boosting, Linear Regression, and Decision Tree with 5-Fold CV.',
   },
   prediction: {
     navLabel: 'Prediction',
     heroTop: 'Student',
     heroAccent: 'Prediction',
     subtitle:
-      'Run live Python ML grade inference with factor contributions and academic improvement guidance.',
+      'Run live Python ML grade inference with counterfactual What-If sweeps and academic guidance.',
   },
   insights: {
     navLabel: 'Insights',
@@ -81,6 +83,13 @@ const PAGE_META: Record<
     heroAccent: 'Diagnostics',
     subtitle:
       'Evaluate actual-vs-predicted test alignment, residual error symmetry, and feature importance.',
+  },
+  risk: {
+    navLabel: 'Risk Radar',
+    heroTop: 'Intervention',
+    heroAccent: 'Priority',
+    subtitle:
+      'Identify recoverable at-risk students projected below 10/20 and simulate targeted study interventions.',
   },
 };
 
@@ -109,7 +118,6 @@ const INITIAL_STUDENT: StudentInputProfile = {
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>('overview');
 
-  // Dataset & Evaluations from Python ML backend
   const [datasetKey, setDatasetKey] = useState<'mat' | 'por' | 'custom'>('mat');
   const [customCsvText, setCustomCsvText] = useState<string | null>(null);
   const [dataset, setDataset] = useState<DatasetPayload | null>(null);
@@ -118,7 +126,6 @@ export default function App() {
     without_grades: EvaluationPayload;
   } | null>(null);
 
-  // Active ML Configuration
   const [includeGrades, setIncludeGrades] = useState<boolean>(true);
   const [selectedModel, setSelectedModel] = useState<ModelKey>('random_forest');
   const [hyperparams, setHyperparams] = useState({
@@ -128,21 +135,17 @@ export default function App() {
     nEstimators: 40,
   });
 
-  // Dynamic Cohort Filters & Search
   const [filters, setFilters] = useState<CohortFilters>(DEFAULT_FILTERS);
   const [globalSearch, setGlobalSearch] = useState<string>('');
 
-  // Student Prediction State
   const [studentInput, setStudentInput] = useState<StudentInputProfile>(INITIAL_STUDENT);
   const [prediction, setPrediction] = useState<PredictionPayload | null>(null);
 
-  // Loading & Error States
   const [loadingBundle, setLoadingBundle] = useState<boolean>(true);
   const [isTraining, setIsTraining] = useState<boolean>(false);
   const [isPredicting, setIsPredicting] = useState<boolean>(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
-  // Python Source Modal
   const [pythonModalOpen, setPythonModalOpen] = useState(false);
   const [pythonFiles, setPythonFiles] = useState<PythonSourceFile[]>([]);
 
@@ -258,6 +261,25 @@ export default function App() {
     }
   };
 
+  const handleSimulateAtRiskStudent = (st: AtRiskStudent) => {
+    const profile: StudentInputProfile = {
+      age: st.age,
+      sex: st.sex === 'M' ? 'M' : 'F',
+      studytime: st.studytime,
+      absences: st.absences,
+      failures: st.failures,
+      Medu: st.Medu,
+      Fedu: st.Fedu,
+      internet: st.internet === 'no' ? 'no' : 'yes',
+      schoolsup: st.schoolsup === 'yes' ? 'yes' : 'no',
+      G1: st.G1,
+      G2: st.G2,
+    };
+    setStudentInput(profile);
+    setActivePage('prediction');
+    executePrediction(profile);
+  };
+
   const handleOpenPythonModal = async () => {
     setPythonModalOpen(true);
     if (!pythonFiles.length) {
@@ -305,21 +327,19 @@ export default function App() {
   const pageMeta = PAGE_META[activePage];
 
   return (
-    <div className="min-h-screen flex flex-col text-[#F7F2F9]">
-      {/* Sleek Dark Glass Top Bar (3-Zone Contract matching image_8cdbd167.png) */}
-      <header className="sticky top-0 z-30 bg-[#100C15]/80 backdrop-blur-2xl border-b border-white/[0.07]">
+    <div className="min-h-screen flex flex-col text-[#F4EFF6]">
+      {/* Sleek Smoked-Glass Top Bar */}
+      <header className="sticky top-0 z-30 bg-[#0D0A11]/82 backdrop-blur-2xl border-b border-white/[0.065]">
         <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-3.5 flex items-center justify-between gap-8">
-          {/* Zone 1: Brand Monogram */}
           <button
             type="button"
             onClick={() => setActivePage('overview')}
-            className="text-2xl font-display font-bold tracking-tight text-[#FAD8EA] whitespace-nowrap shrink-0"
+            className="text-2xl font-display font-bold tracking-tight text-[#F0DCE7] whitespace-nowrap shrink-0"
           >
             ep
           </button>
 
-          {/* Zone 2: Sleek Single-Line Navigation Links */}
-          <nav className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto no-scrollbar py-0.5">
+          <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
             {(Object.keys(PAGE_META) as PageId[]).map((pid) => {
               const isActive = activePage === pid;
               return (
@@ -329,8 +349,8 @@ export default function App() {
                   onClick={() => setActivePage(pid)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
                     isActive
-                      ? 'bg-[#8F5373]/65 border border-[#F4B6D6]/40 text-white shadow-[0_0_20px_rgba(244,182,214,0.16)]'
-                      : 'text-[#A89BB2] hover:text-white'
+                      ? 'glass-pill-active font-semibold'
+                      : 'text-[#A094AA] hover:text-[#FAF6FA]'
                   }`}
                 >
                   {PAGE_META[pid].navLabel}
@@ -339,14 +359,13 @@ export default function App() {
             })}
           </nav>
 
-          {/* Zone 3: Primary Action (UCI CSV Download) */}
           <div className="shrink-0">
             <a
               href={`/api/dataset/download/${datasetKey === 'por' ? 'por' : 'mat'}`}
               download={datasetKey === 'por' ? 'student-por.csv' : 'student-mat.csv'}
-              className="px-4 py-1.5 rounded-full bg-white/[0.06] hover:bg-[#F4B6D6] hover:text-[#17101C] border border-white/12 text-xs font-medium text-[#EDE5F2] transition-all whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/12 text-xs font-medium text-[#EFE9F4] transition-all whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-[#DFC0D1]" />
               <span>UCI Dataset</span>
             </a>
           </div>
@@ -356,7 +375,7 @@ export default function App() {
       {/* Main Sleek Glass Dashboard Canvas */}
       <main className="flex-1 max-w-[1440px] w-full mx-auto px-5 lg:px-8 py-6 space-y-5">
         {errorBanner && (
-          <div className="rounded-2xl bg-rose-950/90 text-rose-100 border border-rose-400/30 px-4 py-3 text-xs flex items-center justify-between">
+          <div className="rounded-2xl bg-[#2B1722] text-[#F2DCE6] border border-[#D4A3B4]/30 px-4 py-3 text-xs flex items-center justify-between">
             <span>{errorBanner}</span>
             <button onClick={() => setErrorBanner(null)} className="p-1 hover:text-white">
               <X className="w-4 h-4" />
@@ -364,13 +383,12 @@ export default function App() {
           </div>
         )}
 
-        {/* Upper Hero Glass Section: Two-Tone Title + Circular Ring + 3 Smoked-Glass KPI Cards */}
+        {/* Upper Hero Glass Section */}
         <section className="glass-shell rounded-[28px] p-6 lg:p-7">
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
-            {/* Left Hero Copy + Donut Ring (Exact Match to Reference Hero Left) */}
             <div className="xl:col-span-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="space-y-2.5 max-w-[290px]">
-                <div className="text-[11px] font-medium tracking-wider text-[#C7B9D1]">
+              <div className="space-y-2.5 max-w-[295px]">
+                <div className="text-[11px] font-medium tracking-wider text-[#B8ABC2]">
                   {dataset ? dataset.datasetLabel : 'UCI Student Performance'}
                 </div>
 
@@ -378,46 +396,44 @@ export default function App() {
                   className="font-display font-semibold tracking-tight leading-[1.06]"
                   style={{ fontSize: 'clamp(2.1rem, 3.2vw, 3.05rem)', textWrap: 'balance' }}
                 >
-                  <span className="block text-white">{pageMeta.heroTop}</span>
-                  <span className="block text-[#E99BC3]">{pageMeta.heroAccent}</span>
+                  <span className="block text-[#FAF6FA]">{pageMeta.heroTop}</span>
+                  <span className="block text-[#DFB8CC]">{pageMeta.heroAccent}</span>
                 </h1>
 
-                <p className="text-xs text-[#9E90A8] leading-relaxed">
+                <p className="text-xs text-[#95899E] leading-relaxed">
                   {pageMeta.subtitle}
                 </p>
               </div>
 
-              {/* Circular Metric Ring right next to Title */}
               <div className="flex items-center gap-3 self-start sm:self-center">
                 <CircularMetricRing percentage={analytics.passRate} label="pass %" />
               </div>
             </div>
 
-            {/* Right 3 Dark Smoked-Glass KPI Cards */}
+            {/* Right 3 Dark Smoked-Glass KPI Cards (Zero Neon) */}
             <div className="xl:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* KPI Card 1 */}
               <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
-                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/12 flex items-center justify-center text-[#E6CCD9] mb-3.5">
                   <GraduationCap className="w-4 h-4" />
                 </div>
 
                 <div>
-                  <div className="text-xs text-[#A89BB2]">Average Final Grade</div>
+                  <div className="text-xs text-[#9E93A6]">Average Final Grade</div>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-[#FAF6FA] tabular-nums">
                       {analytics.avgG3.toFixed(2)}
                     </span>
-                    <sup className="text-[11px] font-mono text-[#9E90A8]">/20</sup>
+                    <sup className="text-[11px] font-mono text-[#95899E]">/20</sup>
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-end justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                    <div className="text-[11px] font-mono font-medium text-[#B5CBBF] flex items-center gap-0.5 tabular-nums">
                       <ArrowUpRight className="w-3 h-3" />
                       <span>Max {analytics.highestG3}</span>
                     </div>
-                    <div className="text-[10px] text-[#7F708A]">out of 20 pts</div>
+                    <div className="text-[10px] text-[#786C82]">out of 20 pts</div>
                   </div>
                   <RoseSparkline
                     id="hero_kpi_1"
@@ -430,29 +446,28 @@ export default function App() {
                 </div>
               </div>
 
-              {/* KPI Card 2 */}
               <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
-                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/12 flex items-center justify-center text-[#E6CCD9] mb-3.5">
                   <BarChart3 className="w-4 h-4" />
                 </div>
 
                 <div>
-                  <div className="text-xs text-[#A89BB2]">Cohort Pass Rate</div>
+                  <div className="text-xs text-[#9E93A6]">Cohort Pass Rate</div>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-[#FAF6FA] tabular-nums">
                       {analytics.passRate.toFixed(1)}
                     </span>
-                    <sup className="text-[11px] font-mono text-[#9E90A8]">%</sup>
+                    <sup className="text-[11px] font-mono text-[#95899E]">%</sup>
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-end justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                    <div className="text-[11px] font-mono font-medium text-[#B5CBBF] flex items-center gap-0.5 tabular-nums">
                       <ArrowUpRight className="w-3 h-3" />
                       <span>n = {analytics.totalStudents}</span>
                     </div>
-                    <div className="text-[10px] text-[#7F708A]">G3 ≥ 10 pass</div>
+                    <div className="text-[10px] text-[#786C82]">G3 ≥ 10 pass</div>
                   </div>
                   <RoseSparkline
                     id="hero_kpi_2"
@@ -465,56 +480,53 @@ export default function App() {
                 </div>
               </div>
 
-              {/* KPI Card 3 */}
               <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
-                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/12 flex items-center justify-center text-[#E6CCD9] mb-3.5">
                   <Activity className="w-4 h-4" />
                 </div>
 
                 <div>
-                  <div className="text-xs text-[#A89BB2]">Best Test R² Score</div>
+                  <div className="text-xs text-[#9E93A6]">Best Test R² Score</div>
                   <div className="mt-1 flex items-baseline gap-1">
-                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-[#FAF6FA] tabular-nums">
                       {bestModelMetrics ? bestModelMetrics.r2.toFixed(3) : '...'}
                     </span>
-                    <sup className="text-[11px] font-mono text-[#9E90A8]">R²</sup>
+                    <sup className="text-[11px] font-mono text-[#95899E]">R²</sup>
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-end justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                    <div className="text-[11px] font-mono font-medium text-[#B5CBBF] flex items-center gap-0.5 tabular-nums">
                       <ArrowUpRight className="w-3 h-3" />
                       <span>RMSE {bestModelMetrics ? bestModelMetrics.rmse.toFixed(2) : '...'}</span>
                     </div>
-                    <div className="text-[10px] text-[#7F708A]">
+                    <div className="text-[10px] text-[#786C82]">
                       {includeGrades ? 'with G1 & G2' : 'habits only'}
                     </div>
                   </div>
-                  <RoseSparkline id="hero_kpi_3" values={[0.66, 0.74, 0.77, 0.85]} />
+                  <RoseSparkline id="hero_kpi_3" values={[0.66, 0.74, 0.81, 0.85]} />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Middle Sleek Dark Glass Filter & Utility Bar (Exact Match to Reference Middle Pill Strip) */}
+        {/* Middle Sleek Frosted Glass Filter & Utility Bar */}
         <section className="glass-shell rounded-[22px] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {/* All Reset Pill */}
             <button
               type="button"
               onClick={() => setFilters(DEFAULT_FILTERS)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 !hasActiveFilters
-                  ? 'bg-[#F4B6D6] text-[#17101C] shadow-[0_0_18px_rgba(244,182,214,0.3)]'
-                  : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
+                  ? 'glass-pill-active font-semibold'
+                  : 'bg-white/[0.03] border border-white/[0.07] text-[#A89BB2] hover:text-white'
               }`}
             >
               All
             </button>
 
-            {/* School GP / MS */}
             {(['GP', 'MS'] as const).map((sch) => (
               <button
                 key={sch}
@@ -524,15 +536,14 @@ export default function App() {
                 }
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                   filters.school === sch
-                    ? 'bg-[#F4B6D6] text-[#17101C] font-semibold'
-                    : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
+                    ? 'glass-pill-active font-semibold'
+                    : 'bg-white/[0.03] border border-white/[0.07] text-[#A89BB2] hover:text-white'
                 }`}
               >
                 School {sch}
               </button>
             ))}
 
-            {/* Gender F / M */}
             {(['F', 'M'] as const).map((sx) => (
               <button
                 key={sx}
@@ -542,15 +553,14 @@ export default function App() {
                 }
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                   filters.sex === sx
-                    ? 'bg-[#F4B6D6] text-[#17101C] font-semibold'
-                    : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
+                    ? 'glass-pill-active font-semibold'
+                    : 'bg-white/[0.03] border border-white/[0.07] text-[#A89BB2] hover:text-white'
                 }`}
               >
                 {sx === 'F' ? 'Female' : 'Male'}
               </button>
             ))}
 
-            {/* Study Time Select */}
             <select
               value={String(filters.studytime)}
               onChange={(e) =>
@@ -560,7 +570,7 @@ export default function App() {
                 }))
               }
               aria-label="Filter by Study Time"
-              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.04] border border-white/[0.08] text-[#D7CADF] focus:outline-none focus:border-[#F4B6D6]/50"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.03] border border-white/[0.07] text-[#D4C9DC] focus:outline-none focus:border-white/25"
             >
               <option value="all">Study: All</option>
               <option value="1">Study: &lt;2h</option>
@@ -569,7 +579,6 @@ export default function App() {
               <option value="4">Study: &gt;10h</option>
             </select>
 
-            {/* Age Bracket Select */}
             <select
               value={`${filters.minAge}-${filters.maxAge}`}
               onChange={(e) => {
@@ -577,7 +586,7 @@ export default function App() {
                 setFilters((f) => ({ ...f, minAge: lo, maxAge: hi }));
               }}
               aria-label="Filter by Age"
-              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.04] border border-white/[0.08] text-[#D7CADF] focus:outline-none focus:border-[#F4B6D6]/50"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.03] border border-white/[0.07] text-[#D4C9DC] focus:outline-none focus:border-white/25"
             >
               <option value="15-22">Age: 15–22</option>
               <option value="15-16">Age: 15–16</option>
@@ -585,10 +594,9 @@ export default function App() {
               <option value="19-22">Age: 19–22</option>
             </select>
 
-            {/* Circular '+' Upload CSV Button matching reference '+' pill */}
             <label
               title="Upload Custom CSV Dataset"
-              className="w-8 h-8 rounded-full bg-[#3A2736]/85 hover:bg-[#F4B6D6] text-[#F4B6D6] hover:text-[#17101C] border border-white/10 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+              className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/[0.14] text-[#EAD0DF] border border-white/12 flex items-center justify-center cursor-pointer transition-colors shrink-0"
             >
               <Plus className="w-4 h-4" />
               <input
@@ -609,10 +617,9 @@ export default function App() {
             </label>
           </div>
 
-          {/* Right Quick Search & Utility Icon Buttons */}
           <div className="flex items-center gap-2">
             <div className="relative hidden md:block w-48">
-              <Search className="w-3.5 h-3.5 text-[#8F8099] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#887C93] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={globalSearch}
@@ -623,7 +630,7 @@ export default function App() {
                   }
                 }}
                 placeholder="Search students..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-white placeholder-[#7F708A] focus:outline-none focus:border-[#F4B6D6]/50"
+                className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.07] text-xs text-white placeholder-[#746880] focus:outline-none focus:border-white/25"
               />
             </div>
 
@@ -632,7 +639,7 @@ export default function App() {
                 type="button"
                 onClick={() => setFilters(DEFAULT_FILTERS)}
                 title="Reset Active Filters"
-                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/15 border border-white/10 flex items-center justify-center text-[#F4B6D6] transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/12 border border-white/10 flex items-center justify-center text-[#EAD0DF] transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -642,7 +649,7 @@ export default function App() {
               type="button"
               onClick={handleOpenPythonModal}
               title="Inspect Modular Python ML Source Code"
-              className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-[#F4B6D6] text-[#D7CADF] hover:text-[#17101C] border border-white/10 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-white/[0.04] hover:bg-white/12 text-[#D4C9DC] hover:text-white border border-white/10 flex items-center justify-center transition-colors"
             >
               <Code2 className="w-3.5 h-3.5" />
             </button>
@@ -654,9 +661,9 @@ export default function App() {
           <div className="glass-shell rounded-[26px] p-10 space-y-4 animate-pulse">
             <div className="h-5 w-64 bg-white/10 rounded-lg" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="h-52 bg-white/[0.04] rounded-2xl" />
-              <div className="h-52 bg-white/[0.04] rounded-2xl" />
-              <div className="h-52 bg-white/[0.04] rounded-2xl" />
+              <div className="h-52 bg-white/[0.03] rounded-2xl" />
+              <div className="h-52 bg-white/[0.03] rounded-2xl" />
+              <div className="h-52 bg-white/[0.03] rounded-2xl" />
             </div>
           </div>
         ) : (
@@ -732,11 +739,18 @@ export default function App() {
                 onToggleIncludeGrades={setIncludeGrades}
               />
             )}
+
+            {activePage === 'risk' && (
+              <RiskRadarPage
+                evaluation={activeEvaluation}
+                onSimulateStudent={handleSimulateAtRiskStudent}
+              />
+            )}
           </>
         )}
 
         {/* Quiet Editorial Footer */}
-        <footer className="pt-2 pb-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#8F8099]">
+        <footer className="pt-2 pb-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#847890]">
           <p>
             UCI Student Performance Dataset (Cortez, 2008) · Python Supervised ML Pipeline
           </p>
@@ -744,21 +758,21 @@ export default function App() {
             <button
               type="button"
               onClick={handleOpenPythonModal}
-              className="hover:text-[#FAD8EA] transition-colors"
+              className="hover:text-[#EAD0DF] transition-colors"
             >
               Python Source Files
             </button>
             <a
               href="/api/dataset/download/mat"
               download="student-mat.csv"
-              className="hover:text-[#FAD8EA] transition-colors"
+              className="hover:text-[#EAD0DF] transition-colors"
             >
               student-mat.csv
             </a>
             <a
               href="/api/dataset/download/por"
               download="student-por.csv"
-              className="hover:text-[#FAD8EA] transition-colors"
+              className="hover:text-[#EAD0DF] transition-colors"
             >
               student-por.csv
             </a>
