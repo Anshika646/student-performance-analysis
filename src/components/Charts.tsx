@@ -4,82 +4,77 @@ import { FeatureImportanceItem, ModelReport, ResidualBin, ScatterPoint } from '.
 type GlassTone = 'pink' | 'lavender' | 'periwinkle' | 'blush';
 
 /**
- * Shared SVG Definitions for Luminous Baby-Pink & Light-Lavender Smoked Glass Bars
- * Matches the translucent neon-rimmed smoked-glass aesthetic of the reference design.
+ * Shared SVG Definitions for Sleek Jet-Black / Smoked-Onyx Glass Columns & Charts
  */
 const GlassSvgDefs: React.FC<{ prefix: string }> = ({ prefix }) => (
   <defs>
-    {/* Soft Baby-Pink Ambient Glow Filter */}
-    <filter id={`${prefix}_pink_glow`} x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur stdDeviation="4" result="blur" />
+    {/* Soft Subtle Rim Glow */}
+    <filter id={`${prefix}_pink_glow`} x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
       <feMerge>
         <feMergeNode in="blur" />
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
 
-    {/* 1. Baby Pink Smoked Glass Body (#F5A6CC / #F8C6DF / #E88DBB) */}
+    {/* 1. Primary Smoked Onyx-Black Glass Body (Subtle blush-warmth on jet black) */}
     <linearGradient id={`${prefix}_body_pink`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FDF8FC" stopOpacity="0.62" />
-      <stop offset="28%" stopColor="#F8C6DF" stopOpacity="0.42" />
-      <stop offset="76%" stopColor="#E88DBB" stopOpacity="0.28" />
-      <stop offset="100%" stopColor="#F5A6CC" stopOpacity="0.48" />
+      <stop offset="0%" stopColor="#2E232D" stopOpacity="0.96" />
+      <stop offset="38%" stopColor="#17121A" stopOpacity="0.96" />
+      <stop offset="100%" stopColor="#08070B" stopOpacity="0.98" />
     </linearGradient>
 
-    {/* 2. Blush Highlight Glass Body (Hovered / Active Peak) */}
+    {/* 2. Hovered / Peak Obsidian-Black Glass Body */}
     <linearGradient id={`${prefix}_body_blush`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.76" />
-      <stop offset="32%" stopColor="#F8C6DF" stopOpacity="0.54" />
-      <stop offset="78%" stopColor="#F5A6CC" stopOpacity="0.36" />
-      <stop offset="100%" stopColor="#E88DBB" stopOpacity="0.58" />
+      <stop offset="0%" stopColor="#3B2B39" stopOpacity="0.98" />
+      <stop offset="42%" stopColor="#1D1620" stopOpacity="0.97" />
+      <stop offset="100%" stopColor="#0A080E" stopOpacity="0.99" />
     </linearGradient>
 
-    {/* 3. Light Lavender Smoked Glass Body (#C4A8F5) */}
+    {/* 3. Graphite-Black Smoked Glass Body */}
     <linearGradient id={`${prefix}_body_lavender`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#F6F1FF" stopOpacity="0.62" />
-      <stop offset="32%" stopColor="#C4A8F5" stopOpacity="0.42" />
-      <stop offset="78%" stopColor="#9D7BE8" stopOpacity="0.26" />
-      <stop offset="100%" stopColor="#C4A8F5" stopOpacity="0.48" />
+      <stop offset="0%" stopColor="#25222E" stopOpacity="0.96" />
+      <stop offset="42%" stopColor="#131119" stopOpacity="0.96" />
+      <stop offset="100%" stopColor="#07060A" stopOpacity="0.98" />
     </linearGradient>
 
-    {/* 4. Soft Pastel Periwinkle-Lavender Glass Body (Model Comparison 3rd Column) */}
+    {/* 4. Deep Carbon-Slate Black Glass Body */}
     <linearGradient id={`${prefix}_body_periwinkle`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#F3F7FF" stopOpacity="0.62" />
-      <stop offset="35%" stopColor="#A6C8FA" stopOpacity="0.40" />
-      <stop offset="80%" stopColor="#7DA8F0" stopOpacity="0.25" />
-      <stop offset="100%" stopColor="#B4CEFC" stopOpacity="0.46" />
+      <stop offset="0%" stopColor="#20232C" stopOpacity="0.96" />
+      <stop offset="45%" stopColor="#111319" stopOpacity="0.96" />
+      <stop offset="100%" stopColor="#06070A" stopOpacity="0.98" />
     </linearGradient>
 
-    {/* Diagonal Specular Glass Reflection Sheen */}
-    <linearGradient id={`${prefix}_sheen`} x1="0" y1="0" x2="1" y2="0.9">
-      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.28" />
-      <stop offset="36%" stopColor="#FFFFFF" stopOpacity="0.06" />
-      <stop offset="75%" stopColor="#FFFFFF" stopOpacity="0.0" />
+    {/* Diagonal Specular Dark-Glass Sheen */}
+    <linearGradient id={`${prefix}_sheen`} x1="0" y1="0" x2="1" y2="0.88">
+      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.14" />
+      <stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.03" />
+      <stop offset="68%" stopColor="#FFFFFF" stopOpacity="0.0" />
     </linearGradient>
 
-    {/* Glowing Rim Gradients */}
+    {/* Precision Specular Rim Gradients */}
     <linearGradient id={`${prefix}_rim_pink`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FDF8FC" stopOpacity="0.82" />
-      <stop offset="50%" stopColor="#F5A6CC" stopOpacity="0.52" />
-      <stop offset="100%" stopColor="#F5A6CC" stopOpacity="0.85" />
+      <stop offset="0%" stopColor="#F8C6DF" stopOpacity="0.72" />
+      <stop offset="45%" stopColor="#F5A6CC" stopOpacity="0.28" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.08" />
     </linearGradient>
 
     <linearGradient id={`${prefix}_rim_lavender`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FDF8FC" stopOpacity="0.80" />
-      <stop offset="50%" stopColor="#C4A8F5" stopOpacity="0.52" />
-      <stop offset="100%" stopColor="#C4A8F5" stopOpacity="0.85" />
+      <stop offset="0%" stopColor="#DCD0F6" stopOpacity="0.62" />
+      <stop offset="45%" stopColor="#C4A8F5" stopOpacity="0.22" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.07" />
     </linearGradient>
 
     <linearGradient id={`${prefix}_rim_periwinkle`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FDF8FC" stopOpacity="0.80" />
-      <stop offset="50%" stopColor="#A6C8FA" stopOpacity="0.52" />
-      <stop offset="100%" stopColor="#A6C8FA" stopOpacity="0.85" />
+      <stop offset="0%" stopColor="#E2E8F4" stopOpacity="0.58" />
+      <stop offset="45%" stopColor="#94A3B8" stopOpacity="0.20" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.06" />
     </linearGradient>
   </defs>
 );
 
 /**
- * Reusable Translucent Smoked-Glass Column Primitive with Soft Pink/Lavender Rim Glow
+ * Reusable Smoked-Black Obsidian Glass Column Primitive
  */
 const GlassColumn: React.FC<{
   prefix: string;
@@ -113,16 +108,16 @@ const GlassColumn: React.FC<{
       : tone === 'periwinkle'
       ? `${prefix}_rim_periwinkle`
       : `${prefix}_rim_pink`;
-  const glowColor =
+  const topCapColor =
     tone === 'lavender'
-      ? 'rgba(196, 168, 245, 0.72)'
+      ? 'rgba(216, 198, 250, 0.85)'
       : tone === 'periwinkle'
-      ? 'rgba(166, 200, 250, 0.72)'
-      : 'rgba(245, 166, 204, 0.78)';
+      ? 'rgba(226, 232, 240, 0.82)'
+      : 'rgba(248, 198, 223, 0.90)';
 
   return (
-    <g opacity={dimmed ? 0.45 : 1} style={{ transition: 'opacity 160ms ease' }}>
-      {/* Optional faint glass slot */}
+    <g opacity={dimmed ? 0.42 : 1} style={{ transition: 'opacity 160ms ease' }}>
+      {/* Pitch-black recessed slot track */}
       {trackTop !== undefined && trackHeight !== undefined && (
         <rect
           x={x}
@@ -130,13 +125,13 @@ const GlassColumn: React.FC<{
           width={width}
           height={trackHeight}
           rx={safeR}
-          fill="rgba(255,255,255,0.015)"
-          stroke="rgba(255,210,235,0.04)"
-          strokeWidth={0.75}
+          fill="#040307"
+          stroke="rgba(255,255,255,0.045)"
+          strokeWidth={0.8}
         />
       )}
 
-      {/* Translucent glass body */}
+      {/* Obsidian smoked-black glass body */}
       <rect
         x={x}
         y={y}
@@ -146,7 +141,7 @@ const GlassColumn: React.FC<{
         fill={`url(#${prefix}_body_${hovered ? 'blush' : tone})`}
       />
 
-      {/* Diagonal optical reflection */}
+      {/* Diagonal dark-glass specular sheen */}
       <rect
         x={x}
         y={y}
@@ -156,7 +151,7 @@ const GlassColumn: React.FC<{
         fill={`url(#${prefix}_sheen)`}
       />
 
-      {/* Luminous rim border */}
+      {/* Fine specular border */}
       <rect
         x={x}
         y={y}
@@ -164,32 +159,19 @@ const GlassColumn: React.FC<{
         height={height}
         rx={safeR}
         fill="none"
-        stroke={hovered ? '#FDF8FC' : `url(#${rimId})`}
-        strokeWidth={hovered ? 1.45 : 1.1}
+        stroke={hovered ? '#F8C6DF' : `url(#${rimId})`}
+        strokeWidth={hovered ? 1.4 : 1.05}
       />
 
-      {/* Subtle top specular cap */}
+      {/* Crisp top meniscus light edge */}
       {width > 10 && (
         <line
-          x1={x + safeR * 0.8}
-          y1={y + 0.8}
-          x2={x + width - safeR * 0.8}
-          y2={y + 0.8}
-          stroke="rgba(255,255,255,0.85)"
-          strokeWidth={1.25}
-          strokeLinecap="round"
-        />
-      )}
-
-      {/* Luminous base reflection glow (signature detail from reference image) */}
-      {width > 12 && (
-        <line
-          x1={x + safeR * 0.6}
-          y1={y + height - 0.8}
-          x2={x + width - safeR * 0.6}
-          y2={y + height - 0.8}
-          stroke={glowColor}
-          strokeWidth={1.8}
+          x1={x + safeR * 0.75}
+          y1={y + 0.85}
+          x2={x + width - safeR * 0.75}
+          y2={y + 0.85}
+          stroke={hovered ? '#FFFFFF' : topCapColor}
+          strokeWidth={1.4}
           strokeLinecap="round"
         />
       )}
@@ -198,7 +180,28 @@ const GlassColumn: React.FC<{
 };
 
 /**
- * Glowing Baby-Pink Micro-Trend Sparkline for KPI Cards
+ * Helper to compute SVG Pie Sector Wedge Path (center -> arc -> center)
+ */
+function describePieWedge(
+  cx: number,
+  cy: number,
+  r: number,
+  startAngleDeg: number,
+  endAngleDeg: number
+): string {
+  const span = Math.min(359.99, Math.max(0.01, endAngleDeg - startAngleDeg));
+  const startRad = ((startAngleDeg - 90) * Math.PI) / 180;
+  const endRad = ((startAngleDeg + span - 90) * Math.PI) / 180;
+  const x1 = cx + r * Math.cos(startRad);
+  const y1 = cy + r * Math.sin(startRad);
+  const x2 = cx + r * Math.cos(endRad);
+  const y2 = cy + r * Math.sin(endRad);
+  const largeArc = span > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+}
+
+/**
+ * Sleek Micro-Trend Sparkline on Dark Cards
  */
 export const RoseSparkline: React.FC<{
   values: number[];
@@ -226,34 +229,18 @@ export const RoseSparkline: React.FC<{
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible shrink-0">
       <defs>
         <linearGradient id={`spark_${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.30" />
-          <stop offset="100%" stopColor="#F5A6CC" stopOpacity="0.0" />
+          <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#07060A" stopOpacity="0.0" />
         </linearGradient>
-        <filter id={`spark_glow_${id}`} x="-20%" y="-30%" width="140%" height="160%">
-          <feGaussianBlur stdDeviation="1.8" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
       <path d={area} fill={`url(#spark_${id})`} />
-      <path
-        d={d}
-        fill="none"
-        stroke="#F5A6CC"
-        strokeWidth="1.85"
-        strokeLinecap="round"
-        filter={`url(#spark_glow_${id})`}
-      />
+      <path d={d} fill="none" stroke="#F5A6CC" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 };
 
 /**
- * 1. Final Grade Distribution (Range Buckets 0–4, 5–9, 10–14, 15–20)
- * Matches the Overview "Final Grade Distribution" glass chart in the reference image,
- * using 100% real dataset rows (supports G3, G2, or G1).
+ * 1. Final Grade Distribution (Obsidian Black Glass Columns on Pitch-Black Plot Well)
  */
 export const GradeRangeDistributionChart: React.FC<{
   rows: Record<string, any>[];
@@ -284,20 +271,20 @@ export const GradeRangeDistributionChart: React.FC<{
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(niceMax * f));
 
   const w = 460;
-  const h = 216;
+  const h = 218;
   const padL = 44;
   const padR = 18;
-  const padT = 20;
+  const padT = 22;
   const padB = 42;
   const plotW = w - padL - padR;
   const plotH = h - padT - padB;
 
   return (
-    <div className="relative select-none">
-      <svg className="w-full h-[216px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
+    <div className="relative select-none chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[214px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         <GlassSvgDefs prefix={uid} />
 
-        {/* Subtle horizontal & vertical glass gridlines */}
+        {/* Subtle dark gridlines */}
         {ticks.map((t, idx) => {
           const y = padT + plotH * (1 - t / niceMax);
           return (
@@ -307,14 +294,14 @@ export const GradeRangeDistributionChart: React.FC<{
                 x2={w - padR}
                 y1={y}
                 y2={y}
-                stroke="rgba(253, 248, 252, 0.07)"
+                stroke="rgba(255, 255, 255, 0.05)"
                 strokeWidth={1}
               />
               <text
                 x={padL - 10}
                 y={y + 3.5}
                 textAnchor="end"
-                className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[10px] font-mono tabular-nums"
               >
                 {t}
               </text>
@@ -322,23 +309,21 @@ export const GradeRangeDistributionChart: React.FC<{
           );
         })}
 
-        {/* Left Y-axis & Bottom X-axis hairlines */}
-        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,210,235,0.16)" />
+        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,255,255,0.10)" />
         <line
           x1={padL}
           x2={w - padR}
           y1={padT + plotH}
           y2={padT + plotH}
-          stroke="rgba(255,210,235,0.20)"
+          stroke="rgba(245,166,204,0.22)"
         />
 
-        {/* Rotated Y-Axis Title */}
         <text
-          x={12}
+          x={13}
           y={padT + plotH / 2}
           textAnchor="middle"
-          transform={`rotate(-90 12 ${padT + plotH / 2})`}
-          className="fill-[#928997] text-[9.5px]"
+          transform={`rotate(-90 13 ${padT + plotH / 2})`}
+          className="fill-[#7D7485] text-[9.5px]"
         >
           Number of Students
         </text>
@@ -364,8 +349,10 @@ export const GradeRangeDistributionChart: React.FC<{
                 y={y}
                 width={barW}
                 height={barH}
+                trackTop={padT}
+                trackHeight={plotH}
                 rx={7}
-                tone="pink"
+                tone={idx >= 2 ? 'pink' : 'lavender'}
                 dimmed={hovered !== null && !isHov}
                 hovered={isHov}
               />
@@ -395,14 +382,14 @@ export const GradeRangeDistributionChart: React.FC<{
           x={padL + plotW / 2}
           y={h - 4}
           textAnchor="middle"
-          className="fill-[#928997] text-[10px]"
+          className="fill-[#7D7485] text-[10px]"
         >
           Grade Range
         </text>
       </svg>
 
       {hovered !== null && buckets[hovered] && (
-        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-2 right-3 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
           <span className="font-semibold text-[#F8C6DF]">
             {gradeCol} {buckets[hovered].label}:
           </span>{' '}
@@ -415,12 +402,13 @@ export const GradeRangeDistributionChart: React.FC<{
 };
 
 /**
- * 2. Translucent Donut Chart with Transparent Center & Soft Pink/Lavender Glow
- * Used for both "Performance Overview" (Pass vs Fail) and "Gender-wise Performance".
+ * 2. Sleek Obsidian-Black Smoked Glass Pie & Donut Chart
+ * Supports true radial Black Glass Pie slices ('pie') and Black Glass Donut ('donut').
  */
 export const PerformanceDonutChart: React.FC<{
   centerLabel: string;
   centerValue: string;
+  variant?: 'pie' | 'donut';
   segments: {
     label: string;
     displayValue: string;
@@ -428,137 +416,259 @@ export const PerformanceDonutChart: React.FC<{
     tone: 'pink' | 'blush' | 'lavender';
     subtext?: string;
   }[];
-}> = ({ centerLabel, centerValue, segments }) => {
+}> = ({ centerLabel, centerValue, variant = 'pie', segments }) => {
   const uid = useId().replace(/:/g, '');
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const size = 164;
-  const stroke = 20;
-  const radius = (size - stroke) / 2 - 4;
-  const circ = 2 * Math.PI * radius;
+  const size = 172;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerR = 74;
+  const stroke = 22;
+  const donutR = (size - stroke) / 2 - 6;
+  const circ = 2 * Math.PI * donutR;
 
-  let cumulative = 0;
+  const totalShare = segments.reduce((acc, s) => acc + Math.max(0, s.share), 0) || 100;
+  let startDeg = 0;
+  let cumulativePct = 0;
 
   return (
-    <div className="relative flex flex-col sm:flex-row items-center justify-between gap-5 py-2">
+    <div className="relative chart-obsidian-well rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90 overflow-visible">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
           <defs>
-            <linearGradient id={`donut_pink_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#F8C6DF" />
-              <stop offset="50%" stopColor="#F5A6CC" />
-              <stop offset="100%" stopColor="#E88DBB" />
+            {/* Slice 1: Deep Onyx-Black Smoked Glass with Warm Blush Sheen */}
+            <linearGradient id={`pie_onyx_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#322430" />
+              <stop offset="48%" stopColor="#19131B" />
+              <stop offset="100%" stopColor="#09070C" />
             </linearGradient>
-            <linearGradient id={`donut_blush_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="rgba(248, 198, 223, 0.55)" />
-              <stop offset="100%" stopColor="rgba(146, 137, 151, 0.32)" />
+
+            {/* Slice 2: Pure Jet-Carbon Black Glass */}
+            <linearGradient id={`pie_carbon_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#1B1922" />
+              <stop offset="55%" stopColor="#0D0C12" />
+              <stop offset="100%" stopColor="#050408" />
             </linearGradient>
-            <linearGradient id={`donut_lavender_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#E0D0FC" />
-              <stop offset="55%" stopColor="#C4A8F5" />
-              <stop offset="100%" stopColor="#9B7AE8" />
+
+            {/* Slice 3 / Alt: Graphite-Obsidian Black Glass */}
+            <linearGradient id={`pie_graphite_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#262132" />
+              <stop offset="55%" stopColor="#12101A" />
+              <stop offset="100%" stopColor="#07060B" />
             </linearGradient>
-            <filter id={`donut_glow_${uid}`} x="-25%" y="-25%" width="150%" height="150%">
-              <feGaussianBlur stdDeviation="3.2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+
+            {/* Diagonal Glass Specular Sheen Overlay */}
+            <linearGradient id={`pie_sheen_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.14" />
+              <stop offset="40%" stopColor="#FFFFFF" stopOpacity="0.02" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
+            </linearGradient>
           </defs>
 
-          {/* Subtle recessed smoked-glass ring track */}
+          {/* Outer Obsidian Bezel Plate */}
           <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.05)"
-            strokeWidth={stroke}
+            cx={cx}
+            cy={cy}
+            r={outerR + 6}
+            fill="#040307"
+            stroke="rgba(255, 255, 255, 0.07)"
+            strokeWidth={1}
           />
 
-          {segments.map((seg, idx) => {
-            const pct = Math.max(0, Math.min(100, seg.share));
-            const segLen = (pct / 100) * circ;
-            const dashArray = `${Math.max(0, segLen - 2)} ${circ}`;
-            const dashOffset = -((cumulative / 100) * circ);
-            cumulative += pct;
+          {variant === 'pie' ? (
+            <>
+              {segments.map((seg, idx) => {
+                const rawShare = Math.max(0, seg.share);
+                if (rawShare <= 0) return null;
+                const pct = (rawShare / totalShare) * 100;
+                const sweep = Math.min(359.95, (pct / 100) * 360);
+                const sDeg = startDeg;
+                const eDeg = startDeg + sweep;
+                const midRad = (((sDeg + sweep / 2) - 90) * Math.PI) / 180;
+                startDeg += (pct / 100) * 360;
 
-            const gradId =
-              seg.tone === 'lavender'
-                ? `donut_lavender_${uid}`
-                : seg.tone === 'blush'
-                ? `donut_blush_${uid}`
-                : `donut_pink_${uid}`;
+                const isHov = hovered === idx;
+                const popOffset = isHov ? 4 : 0;
+                const tx = Math.cos(midRad) * popOffset;
+                const ty = Math.sin(midRad) * popOffset;
 
-            return (
+                const fillId =
+                  seg.tone === 'pink'
+                    ? `pie_onyx_${uid}`
+                    : seg.tone === 'lavender'
+                    ? `pie_graphite_${uid}`
+                    : `pie_carbon_${uid}`;
+
+                const strokeCol =
+                  seg.tone === 'pink'
+                    ? '#F5A6CC'
+                    : seg.tone === 'lavender'
+                    ? '#C4A8F5'
+                    : 'rgba(255,255,255,0.24)';
+
+                const labelR = outerR * 0.62;
+                const lx = cx + labelR * Math.cos(midRad);
+                const ly = cy + labelR * Math.sin(midRad);
+
+                return (
+                  <g
+                    key={seg.label}
+                    transform={`translate(${tx.toFixed(1)}, ${ty.toFixed(1)})`}
+                    onMouseEnter={() => setHovered(idx)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="cursor-pointer transition-transform duration-200"
+                  >
+                    <path
+                      d={describePieWedge(cx, cy, outerR, sDeg, eDeg)}
+                      fill={`url(#${fillId})`}
+                      stroke={isHov ? '#FDF8FC' : strokeCol}
+                      strokeWidth={idx === 0 || isHov ? 1.45 : 1.0}
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d={describePieWedge(cx, cy, outerR, sDeg, eDeg)}
+                      fill={`url(#pie_sheen_${uid})`}
+                      pointerEvents="none"
+                    />
+                    {pct >= 14 && (
+                      <text
+                        x={lx}
+                        y={ly + 3}
+                        textAnchor="middle"
+                        className="fill-[#FDF8FC] text-[10.5px] font-mono font-semibold tabular-nums pointer-events-none"
+                      >
+                        {Math.round(pct)}%
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* Sleek Small Pitch-Black Center Cap */}
               <circle
-                key={seg.label}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={`url(#${gradId})`}
-                strokeWidth={hovered === idx ? stroke + 3 : stroke}
-                strokeDasharray={dashArray}
-                strokeDashoffset={dashOffset}
-                filter={idx === 0 ? `url(#donut_glow_${uid})` : undefined}
-                onMouseEnter={() => setHovered(idx)}
-                onMouseLeave={() => setHovered(null)}
-                className="cursor-pointer transition-all duration-200"
+                cx={cx}
+                cy={cy}
+                r={25}
+                fill="#06050A"
+                stroke="rgba(245, 166, 204, 0.35)"
+                strokeWidth={1.1}
               />
-            );
-          })}
+              <text
+                x={cx}
+                y={cy - 3}
+                textAnchor="middle"
+                className="fill-[#9C92A4] text-[8.5px] font-medium pointer-events-none"
+              >
+                {centerLabel}
+              </text>
+              <text
+                x={cx}
+                y={cy + 9}
+                textAnchor="middle"
+                className="fill-[#FDF8FC] text-[11px] font-display font-bold tabular-nums pointer-events-none"
+              >
+                {centerValue}
+              </text>
+            </>
+          ) : (
+            <g transform={`rotate(-90 ${cx} ${cy})`}>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={donutR}
+                fill="#050408"
+                stroke="#0B0910"
+                strokeWidth={stroke}
+              />
+              {segments.map((seg, idx) => {
+                const pct = Math.max(0, Math.min(100, seg.share));
+                const segLen = (pct / 100) * circ;
+                const dashArray = `${Math.max(0, segLen - 3)} ${circ}`;
+                const dashOffset = -((cumulativePct / 100) * circ);
+                cumulativePct += pct;
 
-          {/* Inner & outer fine glass specular rims */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius + stroke / 2}
-            fill="none"
-            stroke="rgba(255, 210, 235, 0.22)"
-            strokeWidth={0.8}
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius - stroke / 2}
-            fill="none"
-            stroke="rgba(255, 210, 235, 0.18)"
-            strokeWidth={0.8}
-          />
+                const strokeGrad =
+                  seg.tone === 'pink'
+                    ? `url(#pie_onyx_${uid})`
+                    : seg.tone === 'lavender'
+                    ? `url(#pie_graphite_${uid})`
+                    : `url(#pie_carbon_${uid})`;
+
+                const rimColor =
+                  seg.tone === 'pink'
+                    ? '#F5A6CC'
+                    : seg.tone === 'lavender'
+                    ? '#C4A8F5'
+                    : 'rgba(255,255,255,0.28)';
+
+                return (
+                  <g
+                    key={seg.label}
+                    onMouseEnter={() => setHovered(idx)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="cursor-pointer"
+                  >
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={donutR}
+                      fill="none"
+                      stroke={strokeGrad}
+                      strokeWidth={hovered === idx ? stroke + 3 : stroke}
+                      strokeDasharray={dashArray}
+                      strokeDashoffset={dashOffset}
+                    />
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={donutR + stroke / 2}
+                      fill="none"
+                      stroke={rimColor}
+                      strokeWidth={1.3}
+                      strokeDasharray={dashArray}
+                      strokeDashoffset={dashOffset}
+                    />
+                  </g>
+                );
+              })}
+            </g>
+          )}
         </svg>
 
-        {/* Transparent Donut Center */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-          <span className="text-[11px] text-[#BDB4C3] font-medium">{centerLabel}</span>
-          <span className="text-[22px] font-display font-bold text-[#FDF8FC] tabular-nums leading-tight mt-0.5">
-            {centerValue}
-          </span>
-        </div>
+        {variant === 'donut' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+            <span className="text-[10.5px] text-[#9C92A4] font-medium">{centerLabel}</span>
+            <span className="text-[20px] font-display font-bold text-[#FDF8FC] tabular-nums leading-tight mt-0.5">
+              {centerValue}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Right Legend */}
-      <div className="flex-1 w-full space-y-3">
+      {/* Right Obsidian Legend */}
+      <div className="flex-1 w-full space-y-2.5">
         {segments.map((seg, idx) => {
-          const swatchBg =
-            seg.tone === 'lavender'
-              ? 'bg-[#C4A8F5] shadow-[0_0_10px_rgba(196,168,245,0.55)]'
-              : seg.tone === 'blush'
-              ? 'bg-[#F8C6DF]/70'
-              : 'bg-[#F5A6CC] shadow-[0_0_10px_rgba(245,166,204,0.65)]';
+          const swatchStyle =
+            seg.tone === 'pink'
+              ? 'bg-[#221922] border-[#F5A6CC]'
+              : seg.tone === 'lavender'
+              ? 'bg-[#1B1826] border-[#C4A8F5]'
+              : 'bg-[#100F16] border-white/30';
 
           return (
             <div
               key={seg.label}
               onMouseEnter={() => setHovered(idx)}
               onMouseLeave={() => setHovered(null)}
-              className={`flex items-center justify-between gap-3 px-2.5 py-1.5 rounded-xl transition-colors cursor-default ${
-                hovered === idx ? 'bg-white/[0.06]' : ''
+              className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl border transition-all cursor-default ${
+                hovered === idx
+                  ? 'bg-[#181420] border-[#F5A6CC]/45'
+                  : 'bg-[#09080D] border-white/[0.06]'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${swatchBg}`} />
+                <span className={`w-3 h-3 rounded-full border-[1.5px] shrink-0 ${swatchStyle}`} />
                 <span className="text-xs text-[#BDB4C3] truncate">{seg.label}</span>
               </div>
               <span className="text-xs font-mono font-semibold text-[#FDF8FC] tabular-nums shrink-0">
@@ -570,7 +680,7 @@ export const PerformanceDonutChart: React.FC<{
       </div>
 
       {hovered !== null && segments[hovered]?.subtext && (
-        <div className="glass-tooltip absolute -top-1 right-1 px-3 py-1 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute -top-1 right-2 px-3 py-1 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
           {segments[hovered].subtext}
         </div>
       )}
@@ -579,8 +689,7 @@ export const PerformanceDonutChart: React.FC<{
 };
 
 /**
- * 3. Model Comparison Translucent Glass Chart (Baby Pink + Light Lavender + Pastel Periwinkle)
- * Matches the "Model Comparison" panel in the reference image while using real Python ML scores.
+ * 3. Model Comparison Obsidian-Black Smoked Glass Chart
  */
 export const ModelComparisonGlassChart: React.FC<{
   models: ModelReport[];
@@ -632,8 +741,8 @@ export const ModelComparisonGlassChart: React.FC<{
   const plotH = h - padT - padB;
 
   return (
-    <div className="relative select-none">
-      <svg className="w-full h-[198px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
+    <div className="relative select-none chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[196px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         <GlassSvgDefs prefix={uid} />
 
         {ticks.map((t, idx) => {
@@ -645,13 +754,13 @@ export const ModelComparisonGlassChart: React.FC<{
                 x2={w - padR}
                 y1={y}
                 y2={y}
-                stroke="rgba(253, 248, 252, 0.065)"
+                stroke="rgba(255, 255, 255, 0.05)"
               />
               <text
                 x={padL - 8}
                 y={y + 3.5}
                 textAnchor="end"
-                className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[9.5px] font-mono tabular-nums"
               >
                 {t.toFixed(1)}
               </text>
@@ -659,18 +768,18 @@ export const ModelComparisonGlassChart: React.FC<{
           );
         })}
 
-        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,210,235,0.16)" />
+        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,255,255,0.10)" />
         <line
           x1={padL}
           x2={w - padR}
           y1={padT + plotH}
           y2={padT + plotH}
-          stroke="rgba(255,210,235,0.20)"
+          stroke="rgba(245,166,204,0.20)"
         />
 
         {items.map((item, idx) => {
           const slotW = plotW / items.length;
-          const barW = Math.min(64, slotW * 0.6);
+          const barW = Math.min(62, slotW * 0.58);
           const x = padL + idx * slotW + (slotW - barW) / 2;
           const barH = Math.max(8, (Math.min(maxAxis, item.value) / maxAxis) * plotH);
           const y = padT + (plotH - barH);
@@ -690,6 +799,8 @@ export const ModelComparisonGlassChart: React.FC<{
                 y={y}
                 width={barW}
                 height={barH}
+                trackTop={padT}
+                trackHeight={plotH}
                 rx={7}
                 tone={item.tone}
                 dimmed={hovered !== null && !isHov}
@@ -719,7 +830,7 @@ export const ModelComparisonGlassChart: React.FC<{
       </svg>
 
       {hovered !== null && items[hovered] && (
-        <div className="glass-tooltip absolute top-0 right-1 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
           <div className="font-semibold text-[#F8C6DF]">{items[hovered].fullName}</div>
           <div className="text-[#BDB4C3]">
             R² {items[hovered].report.testMetrics.r2.toFixed(3)} · MAE{' '}
@@ -733,15 +844,13 @@ export const ModelComparisonGlassChart: React.FC<{
 };
 
 /**
- * 4. Study Time / Prior Grade vs Final Grade Scatter Plot with Glowing Pink Trend Line
- * Matches the bottom-left scatter plot in the reference image using real UCI student records.
+ * 4. Pitch-Black Obsidian Scatter Plot with Onyx Points & Thin Pink Trend Line
  */
 export const StudyGradeScatterChart: React.FC<{
   rows: Record<string, any>[];
   xField: 'studytime' | 'G2' | 'G1' | 'absences';
   showTrend?: boolean;
 }> = ({ rows, xField, showTrend = true }) => {
-  const uid = useId().replace(/:/g, '');
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const { points, slope, intercept, xMax, xTicks, xLabel } = useMemo(() => {
@@ -754,7 +863,6 @@ export const StudyGradeScatterChart: React.FC<{
 
     const sampled = rows.slice(0, 260).map((r, idx) => {
       const rawX = Number(r[xField] ?? 0);
-      // Deterministic micro-jitter on discrete 1..4 studytime categories so overlapping points are visible
       const jitter =
         xField === 'studytime' ? (((idx * 37) % 100) / 100 - 0.5) * 0.44 : 0;
       const x = Math.max(0, Math.min(maxVal, rawX + jitter));
@@ -769,7 +877,6 @@ export const StudyGradeScatterChart: React.FC<{
       };
     });
 
-    // Compute exact OLS linear regression trend line y = m*x + b on real student rows
     const n = sampled.length || 1;
     const meanX = sampled.reduce((s, p) => s + p.rawX, 0) / n;
     const meanY = sampled.reduce((s, p) => s + p.y, 0) / n;
@@ -825,18 +932,8 @@ export const StudyGradeScatterChart: React.FC<{
   const yEnd = Math.max(0, Math.min(20, slope * xEnd + intercept));
 
   return (
-    <div className="relative select-none">
-      <svg className="w-full h-[196px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
-        <defs>
-          <filter id={`trend_glow_${uid}`} x="-20%" y="-30%" width="140%" height="160%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
+    <div className="relative select-none chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[194px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         {[0, 5, 10, 15, 20].map((yt) => (
           <g key={yt}>
             <line
@@ -844,13 +941,13 @@ export const StudyGradeScatterChart: React.FC<{
               x2={w - padR}
               y1={toY(yt)}
               y2={toY(yt)}
-              stroke="rgba(253, 248, 252, 0.06)"
+              stroke="rgba(255, 255, 255, 0.05)"
             />
             <text
               x={padL - 8}
               y={toY(yt) + 3.5}
               textAnchor="end"
-              className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
+              className="fill-[#9C92A4] text-[9.5px] font-mono tabular-nums"
             >
               {yt}
             </text>
@@ -864,39 +961,39 @@ export const StudyGradeScatterChart: React.FC<{
               x2={toX(xt)}
               y1={padT}
               y2={padT + plotH}
-              stroke="rgba(253, 248, 252, 0.045)"
+              stroke="rgba(255, 255, 255, 0.04)"
             />
             <text
               x={toX(xt)}
               y={padT + plotH + 15}
               textAnchor="middle"
-              className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
+              className="fill-[#9C92A4] text-[9.5px] font-mono tabular-nums"
             >
               {xt}
             </text>
           </g>
         ))}
 
-        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,210,235,0.16)" />
+        <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="rgba(255,255,255,0.10)" />
         <line
           x1={padL}
           x2={w - padR}
           y1={padT + plotH}
           y2={padT + plotH}
-          stroke="rgba(255,210,235,0.20)"
+          stroke="rgba(245,166,204,0.20)"
         />
 
         <text
-          x={12}
+          x={13}
           y={padT + plotH / 2}
           textAnchor="middle"
-          transform={`rotate(-90 12 ${padT + plotH / 2})`}
-          className="fill-[#928997] text-[9.5px]"
+          transform={`rotate(-90 13 ${padT + plotH / 2})`}
+          className="fill-[#7D7485] text-[9.5px]"
         >
           Final Grade (G3)
         </text>
 
-        {/* Pastel Baby-Pink & Light-Lavender Student Scatter Dots */}
+        {/* Onyx-Black Points with Subtle Pink/Silver Specular Rim */}
         {points.map((pt) => {
           const isHov = hoveredIdx === pt.idx;
           const isFemale = pt.sex === 'F';
@@ -905,10 +1002,10 @@ export const StudyGradeScatterChart: React.FC<{
               key={pt.idx}
               cx={toX(pt.x)}
               cy={toY(pt.y)}
-              r={isHov ? 5.2 : 2.8}
-              fill={isFemale ? 'rgba(245, 166, 204, 0.72)' : 'rgba(196, 168, 245, 0.68)'}
-              stroke={isHov ? '#FDF8FC' : 'rgba(255, 240, 250, 0.35)'}
-              strokeWidth={isHov ? 1.5 : 0.6}
+              r={isHov ? 5.2 : 3.0}
+              fill={isFemale ? '#1E151E' : '#14131D'}
+              stroke={isHov ? '#FFFFFF' : isFemale ? '#F5A6CC' : 'rgba(220, 212, 234, 0.65)'}
+              strokeWidth={isHov ? 1.6 : 1.0}
               onMouseEnter={() => setHoveredIdx(pt.idx)}
               onMouseLeave={() => setHoveredIdx(null)}
               className="cursor-pointer transition-all"
@@ -916,17 +1013,16 @@ export const StudyGradeScatterChart: React.FC<{
           );
         })}
 
-        {/* Thin Glowing Baby-Pink Linear Regression Trend Line */}
+        {/* Sleek Precision Trend Line */}
         {showTrend && points.length >= 2 && (
           <line
             x1={toX(xStart)}
             y1={toY(yStart)}
             x2={toX(xEnd)}
             y2={toY(yEnd)}
-            stroke="#F8C6DF"
-            strokeWidth={2}
+            stroke="#F5A6CC"
+            strokeWidth={1.8}
             strokeLinecap="round"
-            filter={`url(#trend_glow_${uid})`}
           />
         )}
 
@@ -934,14 +1030,14 @@ export const StudyGradeScatterChart: React.FC<{
           x={padL + plotW / 2}
           y={h - 3}
           textAnchor="middle"
-          className="fill-[#928997] text-[9.5px]"
+          className="fill-[#7D7485] text-[9.5px]"
         >
           {xLabel}
         </text>
       </svg>
 
       {hoveredIdx !== null && points[hoveredIdx] && (
-        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-2 right-3 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none tabular-nums">
           <span className="font-semibold text-[#F8C6DF]">
             {points[hoveredIdx].sex === 'F' ? 'Female' : 'Male'} ({points[hoveredIdx].age}y):
           </span>{' '}
@@ -955,7 +1051,7 @@ export const StudyGradeScatterChart: React.FC<{
 };
 
 /**
- * Circular Frosted Glass Ring
+ * Circular Obsidian Metric Ring
  */
 export const CircularMetricRing: React.FC<{
   percentage: number;
@@ -978,15 +1074,15 @@ export const CircularMetricRing: React.FC<{
         <defs>
           <linearGradient id={`ring_${uid}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#F8C6DF" />
-            <stop offset="55%" stopColor="#F5A6CC" />
-            <stop offset="100%" stopColor="#C4A8F5" />
+            <stop offset="65%" stopColor="#F5A6CC" />
+            <stop offset="100%" stopColor="#2A1E28" />
           </linearGradient>
         </defs>
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          fill="none"
+          fill="#060509"
           stroke="rgba(255,255,255,0.06)"
           strokeWidth={stroke}
         />
@@ -1007,14 +1103,14 @@ export const CircularMetricRing: React.FC<{
         <span className="text-2xl font-display font-semibold text-[#FDF8FC] tabular-nums leading-none">
           {Math.round(clamped)}
         </span>
-        <span className="text-[10px] text-[#BDB4C3] font-mono mt-0.5">{label}</span>
+        <span className="text-[10px] text-[#9C92A4] font-mono mt-0.5">{label}</span>
       </div>
     </div>
   );
 };
 
 /**
- * Translucent Baby-Pink & Light-Lavender Vertical Bar Chart
+ * Obsidian-Black Smoked Glass Vertical Bar Chart
  */
 export const SculptedBarChart: React.FC<{
   data: { label: string; value: number; subtext?: string; count?: number; active?: boolean }[];
@@ -1029,7 +1125,7 @@ export const SculptedBarChart: React.FC<{
 
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center h-44 text-xs text-[#928997]">
+      <div className="chart-obsidian-well rounded-2xl flex items-center justify-center h-44 text-xs text-[#8C8393]">
         No matching students for current filter selection.
       </div>
     );
@@ -1041,7 +1137,7 @@ export const SculptedBarChart: React.FC<{
     accent === 'lavender' ? 'lavender' : accent === 'cyan' ? 'periwinkle' : 'pink';
 
   return (
-    <div className="relative select-none" style={{ height }}>
+    <div className="relative select-none chart-obsidian-well rounded-2xl p-2" style={{ height }}>
       <svg className="w-full h-full overflow-visible" viewBox={`0 0 420 ${height}`}>
         <GlassSvgDefs prefix={uid} />
 
@@ -1055,7 +1151,7 @@ export const SculptedBarChart: React.FC<{
               x2={412}
               y1={y}
               y2={y}
-              stroke="rgba(253,248,252,0.06)"
+              stroke="rgba(255,255,255,0.045)"
               strokeDasharray="2 4"
             />
           );
@@ -1108,23 +1204,19 @@ export const SculptedBarChart: React.FC<{
                     x={x}
                     y={height - 34}
                     width={barW}
-                    height={24}
-                    rx={12}
-                    fill={
-                      isHighlight || isHov
-                        ? 'rgba(245, 166, 204, 0.16)'
-                        : 'rgba(255, 255, 255, 0.04)'
-                    }
+                    height={23}
+                    rx={11.5}
+                    fill="#08070C"
                     stroke={
                       isHighlight || isHov
-                        ? 'rgba(248, 198, 223, 0.42)'
-                        : 'rgba(255, 210, 235, 0.14)'
+                        ? 'rgba(245, 166, 204, 0.42)'
+                        : 'rgba(255, 255, 255, 0.10)'
                     }
                     strokeWidth={1}
                   />
                   <text
                     x={x + barW / 2}
-                    y={height - 18}
+                    y={height - 19}
                     textAnchor="middle"
                     className="fill-[#FDF8FC] text-[10px] font-medium"
                   >
@@ -1146,7 +1238,7 @@ export const SculptedBarChart: React.FC<{
                       x={x + barW / 2}
                       y={height - 3}
                       textAnchor="middle"
-                      className="fill-[#928997] text-[9.5px] font-mono tabular-nums"
+                      className="fill-[#7D7485] text-[9.5px] font-mono tabular-nums"
                     >
                       n={item.count}
                     </text>
@@ -1159,7 +1251,7 @@ export const SculptedBarChart: React.FC<{
       </svg>
 
       {hovered !== null && data[hovered]?.subtext && (
-        <div className="glass-tooltip absolute top-0 right-1 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none">
+        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1.5 rounded-xl text-[11px] text-[#FDF8FC] pointer-events-none">
           <span className="font-semibold text-[#F8C6DF]">{data[hovered].label}:</span>{' '}
           <span className="tabular-nums text-[#BDB4C3]">{data[hovered].subtext}</span>
         </div>
@@ -1169,7 +1261,7 @@ export const SculptedBarChart: React.FC<{
 };
 
 /**
- * Interactive 0–20 Grade Score Matrix Grid
+ * Interactive 0–20 Grade Score Matrix Grid in Pitch-Black Glass
  */
 export const GradeScoreMatrix: React.FC<{
   data: { grade: number; count: number; status: string }[];
@@ -1202,7 +1294,7 @@ export const GradeScoreMatrix: React.FC<{
 
         <div className="grid grid-cols-7 gap-1.5 text-center mb-1.5">
           {tierHeaders.map((h, i) => (
-            <span key={i} className="text-[10px] font-mono text-[#928997]">
+            <span key={i} className="text-[10px] font-mono text-[#7D7485]">
               {h}
             </span>
           ))}
@@ -1223,10 +1315,10 @@ export const GradeScoreMatrix: React.FC<{
                   isSelected
                     ? 'glass-pill-active font-semibold scale-105'
                     : isPassing && hasStudents
-                    ? 'text-[#FDF8FC] bg-white/[0.04] hover:bg-white/[0.09] border border-[#F5A6CC]/20'
+                    ? 'text-[#FDF8FC] bg-[#0B0910] hover:bg-[#181421] border border-[#F5A6CC]/22'
                     : hasStudents
-                    ? 'text-[#BDB4C3] hover:bg-white/[0.05]'
-                    : 'text-[#5C5363]'
+                    ? 'text-[#BDB4C3] bg-[#07060B] hover:bg-[#14111B]'
+                    : 'text-[#4C4554]'
                 }`}
               >
                 {cell.grade}
@@ -1236,7 +1328,7 @@ export const GradeScoreMatrix: React.FC<{
         </div>
       </div>
 
-      <div className="mt-3 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] tabular-nums">
+      <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] tabular-nums">
         <span className="text-[#BDB4C3]">
           Grade <strong className="text-[#FDF8FC] font-mono">{activeObj.grade}/20</strong> (
           {activeObj.status})
@@ -1250,7 +1342,7 @@ export const GradeScoreMatrix: React.FC<{
 };
 
 /**
- * Full 0–20 Final Grade (G3) Translucent Baby-Pink & Lavender Histogram
+ * Full 0–20 Final Grade (G3) Obsidian-Black Histogram
  */
 export const GradeDistributionChart: React.FC<{
   data: { grade: number; count: number; status: string }[];
@@ -1262,20 +1354,20 @@ export const GradeDistributionChart: React.FC<{
   const usableH = 160;
 
   return (
-    <div className="relative">
-      <svg className="w-full h-[218px] overflow-visible" viewBox={`0 0 540 ${h}`}>
+    <div className="relative chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[214px] overflow-visible" viewBox={`0 0 540 ${h}`}>
         <GlassSvgDefs prefix={uid} />
 
         {[0.25, 0.5, 0.75, 1].map((f, i) => {
           const y = 18 + usableH * (1 - f);
           return (
             <g key={i}>
-              <line x1={28} x2={532} y1={y} y2={y} stroke="rgba(253,248,252,0.06)" />
+              <line x1={28} x2={532} y1={y} y2={y} stroke="rgba(255,255,255,0.045)" />
               <text
                 x={22}
                 y={y + 3}
                 textAnchor="end"
-                className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[9.5px] font-mono tabular-nums"
               >
                 {Math.round(maxCount * f)}
               </text>
@@ -1289,8 +1381,8 @@ export const GradeDistributionChart: React.FC<{
           y1={10}
           y2={180}
           stroke="#F5A6CC"
-          strokeOpacity={0.75}
-          strokeWidth={1.3}
+          strokeOpacity={0.7}
+          strokeWidth={1.2}
           strokeDasharray="3 3"
         />
         <text x={28 + 10 * 24 + 6} y={18} className="fill-[#F8C6DF] text-[10px] font-medium">
@@ -1326,7 +1418,7 @@ export const GradeDistributionChart: React.FC<{
                 x={x + 9}
                 y={196}
                 textAnchor="middle"
-                className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[10px] font-mono tabular-nums"
               >
                 {d.grade}
               </text>
@@ -1336,10 +1428,10 @@ export const GradeDistributionChart: React.FC<{
       </svg>
 
       {hovered !== null && data[hovered] && (
-        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1.5 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-2 right-3 px-3 py-1.5 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
           Grade <span className="font-semibold text-[#F8C6DF]">{data[hovered].grade}/20</span> ·{' '}
           <span className="text-[#BDB4C3]">{data[hovered].count} students</span> ·{' '}
-          <span className={data[hovered].grade >= 10 ? 'text-[#F5A6CC]' : 'text-[#C4A8F5]'}>
+          <span className={data[hovered].grade >= 10 ? 'text-[#F8C6DF]' : 'text-[#C4A8F5]'}>
             {data[hovered].status}
           </span>
         </div>
@@ -1349,7 +1441,7 @@ export const GradeDistributionChart: React.FC<{
 };
 
 /**
- * Longitudinal Period Trajectory Chart (G1 -> G2 -> G3) in Baby-Pink & Lavender Glass
+ * Longitudinal Period Trajectory Chart in Obsidian-Black Smoked Glass
  */
 export const PeriodProgressionChart: React.FC<{
   data: { period: string; passingAvg: number; failingAvg: number; overallAvg: number }[];
@@ -1358,18 +1450,18 @@ export const PeriodProgressionChart: React.FC<{
   if (!data.length) return null;
 
   return (
-    <div>
+    <div className="chart-obsidian-well rounded-2xl p-3">
       <div className="flex items-center justify-end gap-5 mb-2 text-[11px] text-[#BDB4C3]">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#F5A6CC]/80 border border-white/40 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#241B23] border border-[#F5A6CC] inline-block" />
           Passing Cohort (G3 ≥ 10)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#C4A8F5]/75 border border-white/30 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#14121B] border border-[#C4A8F5]/70 inline-block" />
           Overall Mean
         </span>
       </div>
-      <svg className="w-full h-[195px] overflow-visible" viewBox="0 0 440 195">
+      <svg className="w-full h-[188px] overflow-visible" viewBox="0 0 440 195">
         <GlassSvgDefs prefix={uid} />
         {data.map((d, idx) => {
           const slot = 410 / data.length;
@@ -1418,7 +1510,7 @@ export const PeriodProgressionChart: React.FC<{
                 x={xBase + barW + 8 + barW / 2}
                 y={yAll - 6}
                 textAnchor="middle"
-                className="fill-[#E4D6FA] text-[10px] font-mono tabular-nums"
+                className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
               >
                 {d.overallAvg}
               </text>
@@ -1440,7 +1532,7 @@ export const PeriodProgressionChart: React.FC<{
 };
 
 /**
- * Age-wise Smooth Glowing Pink Trajectory Chart
+ * Age-wise Trajectory on Pitch-Black Obsidian Canvas
  */
 export const AgeTrajectoryChart: React.FC<{
   data: { age: number; avgG3: number; passRate: number; count: number }[];
@@ -1449,7 +1541,7 @@ export const AgeTrajectoryChart: React.FC<{
   const [hovered, setHovered] = useState<number | null>(null);
   if (data.length < 2) {
     return (
-      <div className="flex items-center justify-center h-44 text-xs text-[#928997]">
+      <div className="chart-obsidian-well rounded-2xl flex items-center justify-center h-44 text-xs text-[#8C8393]">
         Select at least 2 age cohorts to inspect age trajectory.
       </div>
     );
@@ -1474,20 +1566,13 @@ export const AgeTrajectoryChart: React.FC<{
   const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${22 + usableH} L ${pts[0].x.toFixed(1)} ${22 + usableH} Z`;
 
   return (
-    <div className="relative">
-      <svg className="w-full h-[205px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
+    <div className="relative chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[200px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         <defs>
           <linearGradient id={`ageArea_${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.34" />
-            <stop offset="100%" stopColor="#C4A8F5" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="#261B25" stopOpacity="0.88" />
+            <stop offset="100%" stopColor="#060509" stopOpacity="0.05" />
           </linearGradient>
-          <filter id={`ageGlow_${uid}`} x="-20%" y="-30%" width="140%" height="160%">
-            <feGaussianBlur stdDeviation="2.4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
         {[6, 10, 14].map((g) => {
           const y = 22 + usableH - ((g - minY) / (maxY - minY)) * usableH;
@@ -1498,14 +1583,14 @@ export const AgeTrajectoryChart: React.FC<{
                 x2={w - padX}
                 y1={y}
                 y2={y}
-                stroke="rgba(253,248,252,0.06)"
+                stroke="rgba(255,255,255,0.05)"
                 strokeDasharray="3 3"
               />
               <text
                 x={padX - 8}
                 y={y + 3}
                 textAnchor="end"
-                className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[10px] font-mono tabular-nums"
               >
                 {g}
               </text>
@@ -1513,14 +1598,7 @@ export const AgeTrajectoryChart: React.FC<{
           );
         })}
         <path d={areaPath} fill={`url(#ageArea_${uid})`} />
-        <path
-          d={linePath}
-          fill="none"
-          stroke="#F5A6CC"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          filter={`url(#ageGlow_${uid})`}
-        />
+        <path d={linePath} fill="none" stroke="#F5A6CC" strokeWidth="2" strokeLinecap="round" />
         {pts.map((p, idx) => (
           <g
             key={p.age}
@@ -1531,10 +1609,10 @@ export const AgeTrajectoryChart: React.FC<{
             <circle
               cx={p.x}
               cy={p.y}
-              r={hovered === idx ? 5.8 : 4.2}
-              fill="#19151E"
+              r={hovered === idx ? 5.6 : 4.2}
+              fill="#07060A"
               stroke="#F8C6DF"
-              strokeWidth={2}
+              strokeWidth={1.8}
             />
             <text
               x={p.x}
@@ -1556,7 +1634,7 @@ export const AgeTrajectoryChart: React.FC<{
               x={p.x}
               y={197}
               textAnchor="middle"
-              className="fill-[#928997] text-[9px] font-mono tabular-nums"
+              className="fill-[#7D7485] text-[9px] font-mono tabular-nums"
             >
               n={p.count}
             </text>
@@ -1564,7 +1642,7 @@ export const AgeTrajectoryChart: React.FC<{
         ))}
       </svg>
       {hovered !== null && pts[hovered] && (
-        <div className="glass-tooltip absolute top-0 right-2 px-3 py-1 rounded-xl text-xs text-[#FDF8FC] tabular-nums">
+        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1 rounded-xl text-xs text-[#FDF8FC] tabular-nums">
           Age {pts[hovered].age}: Avg{' '}
           <span className="text-[#F8C6DF] font-semibold">{pts[hovered].avgG3}/20</span> · Pass{' '}
           {pts[hovered].passRate}%
@@ -1575,7 +1653,7 @@ export const AgeTrajectoryChart: React.FC<{
 };
 
 /**
- * Dual Grouped Baby-Pink vs Light-Lavender Frosted Glass Bar Chart
+ * Dual Grouped Obsidian-Black vs Graphite-Black Glass Bar Chart
  */
 export const GroupedBarsChart: React.FC<{
   categories: string[];
@@ -1589,18 +1667,18 @@ export const GroupedBarsChart: React.FC<{
   const usableH = 142;
 
   return (
-    <div>
+    <div className="chart-obsidian-well rounded-2xl p-3">
       <div className="flex items-center justify-end gap-5 mb-1 text-[11px] text-[#BDB4C3]">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#F5A6CC]/80 border border-white/40 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#241B23] border border-[#F5A6CC] inline-block" />
           {seriesA.name}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#C4A8F5]/80 border border-white/30 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#14121C] border border-[#C4A8F5]/75 inline-block" />
           {seriesB.name}
         </span>
       </div>
-      <svg className="w-full h-[195px] overflow-visible" viewBox={`0 0 440 ${h}`}>
+      <svg className="w-full h-[188px] overflow-visible" viewBox={`0 0 440 ${h}`}>
         <GlassSvgDefs prefix={uid} />
         {categories.map((cat, idx) => {
           const slot = 420 / categories.length;
@@ -1648,7 +1726,7 @@ export const GroupedBarsChart: React.FC<{
                 x={xBase + barW + 6 + barW / 2}
                 y={yB - 5}
                 textAnchor="middle"
-                className="fill-[#E4D6FA] text-[9.5px] font-mono tabular-nums"
+                className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
               >
                 {seriesB.values[idx]}
               </text>
@@ -1670,7 +1748,7 @@ export const GroupedBarsChart: React.FC<{
 };
 
 /**
- * 8. Translucent Smoked-Glass Correlation Heatmap (Baby Pink Positive, Light Lavender Negative)
+ * 8. Obsidian-Black Smoked Glass Correlation Heatmap
  */
 export const CorrelationHeatmap: React.FC<{
   columns: string[];
@@ -1680,23 +1758,27 @@ export const CorrelationHeatmap: React.FC<{
   if (!columns.length || !matrix.length) return null;
 
   const cellStyle = (val: number): React.CSSProperties => {
+    const mag = Math.abs(val);
     if (val >= 0) {
-      const alpha = 0.06 + val * 0.50;
       return {
-        background: `linear-gradient(155deg, rgba(248, 198, 223, ${(alpha * 1.05).toFixed(2)}) 0%, rgba(232, 141, 187, ${(alpha * 0.68).toFixed(2)}) 100%)`,
-        boxShadow: 'inset 0 1px 0 rgba(255,245,250,0.22)',
+        background: `linear-gradient(155deg, rgba(${Math.round(14 + mag * 38)}, ${Math.round(11 + mag * 22)}, ${Math.round(18 + mag * 32)}, 0.96) 0%, rgba(7, 6, 10, 0.98) 100%)`,
+        borderColor:
+          val >= 0.65
+            ? 'rgba(245, 166, 204, 0.52)'
+            : `rgba(255, 255, 255, ${(0.06 + mag * 0.16).toFixed(2)})`,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
       };
     }
-    const alpha = 0.07 + Math.abs(val) * 0.52;
     return {
-      background: `linear-gradient(155deg, rgba(196, 168, 245, ${alpha.toFixed(2)}) 0%, rgba(132, 104, 196, ${(alpha * 0.68).toFixed(2)}) 100%)`,
-      boxShadow: 'inset 0 1px 0 rgba(240,235,255,0.18)',
+      background: `linear-gradient(155deg, rgba(${Math.round(14 + mag * 22)}, ${Math.round(14 + mag * 20)}, ${Math.round(22 + mag * 34)}, 0.96) 0%, rgba(6, 6, 10, 0.98) 100%)`,
+      borderColor: `rgba(196, 168, 245, ${(0.10 + mag * 0.32).toFixed(2)})`,
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
     };
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex items-center justify-between mb-3 text-xs text-[#BDB4C3]">
+    <div className="overflow-x-auto chart-obsidian-well rounded-2xl p-4 mt-2">
+      <div className="flex items-center justify-between mb-3 text-xs text-[#9C92A4]">
         <span>Pearson Correlation Coefficient (r) across numerical student attributes</span>
         {hoverCell && (
           <span className="font-mono tabular-nums text-[#F8C6DF]">
@@ -1731,9 +1813,17 @@ export const CorrelationHeatmap: React.FC<{
                 onMouseEnter={() => setHoverCell({ r: rIdx, c: cIdx, val })}
                 onMouseLeave={() => setHoverCell(null)}
                 style={cellStyle(val)}
-                className="h-10 rounded-xl flex items-center justify-center text-[11px] font-mono tabular-nums transition-transform duration-150 hover:scale-[1.04] border border-[rgba(255,210,235,0.20)] cursor-default text-[#FDF8FC]"
+                className="h-10 rounded-xl flex items-center justify-center text-[11px] font-mono tabular-nums transition-transform duration-150 hover:scale-[1.04] border cursor-default"
               >
-                <span className={val >= 0.75 ? 'font-bold text-white' : 'text-[#FDF8FC]/90'}>
+                <span
+                  className={
+                    val >= 0.7
+                      ? 'font-bold text-[#F8C6DF]'
+                      : val < -0.2
+                      ? 'text-[#C4A8F5]'
+                      : 'text-[#BDB4C3]'
+                  }
+                >
                   {val.toFixed(2)}
                 </span>
               </div>
@@ -1746,12 +1836,11 @@ export const CorrelationHeatmap: React.FC<{
 };
 
 /**
- * 7. Actual vs Predicted Translucent Glass Scatter Plot with Glowing Pink Alignment Line
+ * 7. Actual vs Predicted Pitch-Black Obsidian Scatter Plot
  */
 export const ActualVsPredictedScatter: React.FC<{
   points: ScatterPoint[];
 }> = ({ points }) => {
-  const uid = useId().replace(/:/g, '');
   const [hovered, setHovered] = useState<ScatterPoint | null>(null);
   const w = 440;
   const h = 270;
@@ -1766,18 +1855,8 @@ export const ActualVsPredictedScatter: React.FC<{
   const toY = (v: number) => padT + plotH - (Math.max(0, Math.min(20, v)) / 20) * plotH;
 
   return (
-    <div className="relative">
-      <svg className="w-full h-[270px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
-        <defs>
-          <filter id={`avp_glow_${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
+    <div className="relative chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[266px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         {[0, 5, 10, 15, 20].map((tick) => (
           <g key={tick}>
             <line
@@ -1785,20 +1864,20 @@ export const ActualVsPredictedScatter: React.FC<{
               x2={w - padR}
               y1={toY(tick)}
               y2={toY(tick)}
-              stroke="rgba(253,248,252,0.06)"
+              stroke="rgba(255,255,255,0.05)"
             />
             <line
               x1={toX(tick)}
               x2={toX(tick)}
               y1={padT}
               y2={h - padB}
-              stroke="rgba(253,248,252,0.05)"
+              stroke="rgba(255,255,255,0.04)"
             />
             <text
               x={padL - 8}
               y={toY(tick) + 3}
               textAnchor="end"
-              className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
+              className="fill-[#9C92A4] text-[10px] font-mono tabular-nums"
             >
               {tick}
             </text>
@@ -1806,24 +1885,22 @@ export const ActualVsPredictedScatter: React.FC<{
               x={toX(tick)}
               y={h - padB + 15}
               textAnchor="middle"
-              className="fill-[#BDB4C3] text-[10px] font-mono tabular-nums"
+              className="fill-[#9C92A4] text-[10px] font-mono tabular-nums"
             >
               {tick}
             </text>
           </g>
         ))}
 
-        {/* Glowing Baby-Pink Ideal y = x Line */}
         <line
           x1={toX(0)}
           y1={toY(0)}
           x2={toX(20)}
           y2={toY(20)}
           stroke="#F5A6CC"
-          strokeOpacity={0.78}
-          strokeWidth={1.6}
+          strokeOpacity={0.68}
+          strokeWidth={1.4}
           strokeDasharray="4 4"
-          filter={`url(#avp_glow_${uid})`}
         />
         <text x={toX(13.6)} y={toY(16.4)} className="fill-[#F8C6DF] text-[10px] font-medium">
           Ideal Fit (y = x)
@@ -1837,9 +1914,9 @@ export const ActualVsPredictedScatter: React.FC<{
               key={pt.id}
               cx={toX(pt.actual)}
               cy={toY(pt.predicted)}
-              r={isHov ? 6.6 : 4.5}
-              fill={closeFit ? 'rgba(245, 166, 204, 0.58)' : 'rgba(196, 168, 245, 0.46)'}
-              stroke={isHov ? '#FDF8FC' : closeFit ? '#F8C6DF' : '#C4A8F5'}
+              r={isHov ? 6.4 : 4.4}
+              fill={closeFit ? '#211720' : '#13111B'}
+              stroke={isHov ? '#FFFFFF' : closeFit ? '#F5A6CC' : 'rgba(216, 206, 232, 0.55)'}
               strokeWidth={isHov ? 1.8 : 1.15}
               onMouseEnter={() => setHovered(pt)}
               onMouseLeave={() => setHovered(null)}
@@ -1848,13 +1925,13 @@ export const ActualVsPredictedScatter: React.FC<{
           );
         })}
 
-        <text x={w / 2} y={h - 3} textAnchor="middle" className="fill-[#928997] text-[11px]">
+        <text x={w / 2} y={h - 3} textAnchor="middle" className="fill-[#7D7485] text-[11px]">
           Actual Held-Out Test Grade G3 (0–20)
         </text>
       </svg>
 
       {hovered && (
-        <div className="glass-tooltip absolute top-2 left-12 px-3 py-2 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-3 left-12 px-3 py-2 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
           <div className="font-semibold text-[#F8C6DF]">Test Student #{hovered.id}</div>
           <div className="text-[#BDB4C3]">
             Actual: <b className="text-white">{hovered.actual}</b> · Predicted:{' '}
@@ -1874,7 +1951,7 @@ export const ActualVsPredictedScatter: React.FC<{
 };
 
 /**
- * 9. Residual Distribution Frosted Glass Histogram + Glowing Pink Smooth Curve
+ * 9. Residual Distribution Obsidian-Black Histogram + Sleek Density Curve
  */
 export const ResidualHistogram: React.FC<{ bins: ResidualBin[] }> = ({ bins }) => {
   const uid = useId().replace(/:/g, '');
@@ -1901,8 +1978,8 @@ export const ResidualHistogram: React.FC<{ bins: ResidualBin[] }> = ({ bins }) =
   }
 
   return (
-    <div className="relative">
-      <svg className="w-full h-[235px] overflow-visible" viewBox={`0 0 440 ${h}`}>
+    <div className="relative chart-obsidian-well rounded-2xl p-2">
+      <svg className="w-full h-[231px] overflow-visible" viewBox={`0 0 440 ${h}`}>
         <GlassSvgDefs prefix={uid} />
         {bins.map((b, i) => {
           const x = 18 + i * slot;
@@ -1945,7 +2022,7 @@ export const ResidualHistogram: React.FC<{ bins: ResidualBin[] }> = ({ bins }) =
                 x={x + barW / 2}
                 y={204}
                 textAnchor="middle"
-                className="fill-[#BDB4C3] text-[9.5px] font-mono tabular-nums"
+                className="fill-[#9C92A4] text-[9.5px] font-mono tabular-nums"
               >
                 {b.binLabel}
               </text>
@@ -1957,20 +2034,19 @@ export const ResidualHistogram: React.FC<{ bins: ResidualBin[] }> = ({ bins }) =
           <path
             d={curvePath}
             fill="none"
-            stroke="#F8C6DF"
-            strokeWidth={1.8}
+            stroke="#F5A6CC"
+            strokeWidth={1.6}
             strokeLinecap="round"
-            filter={`url(#${uid}_pink_glow)`}
           />
         )}
 
-        <text x={220} y={226} textAnchor="middle" className="fill-[#928997] text-[11px]">
+        <text x={220} y={226} textAnchor="middle" className="fill-[#7D7485] text-[11px]">
           Residual Error (y_actual − y_predicted)
         </text>
       </svg>
 
       {hovered !== null && bins[hovered] && (
-        <div className="glass-tooltip absolute top-1 right-2 px-3 py-1 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
+        <div className="glass-tooltip absolute top-2 right-3 px-3 py-1 rounded-xl text-xs text-[#FDF8FC] pointer-events-none tabular-nums">
           Bin <span className="text-[#F8C6DF] font-semibold">{bins[hovered].range}</span>:{' '}
           {bins[hovered].count} test students
         </div>
@@ -1980,19 +2056,19 @@ export const ResidualHistogram: React.FC<{ bins: ResidualBin[] }> = ({ bins }) =
 };
 
 /**
- * 6. Horizontal Translucent Baby-Pink & Lavender Feature Importance Bars
+ * 6. Horizontal Smoked-Black Obsidian Feature Importance Bars
  */
 export const FeatureImportanceBars: React.FC<{ items: FeatureImportanceItem[] }> = ({ items }) => {
   const maxPct = Math.max(...items.map((i) => i.percentage), 1);
   return (
-    <div className="space-y-3">
+    <div className="chart-obsidian-well rounded-2xl p-4 space-y-3">
       {items.map((item, idx) => {
         const widthPct = Math.max(4, (item.percentage / maxPct) * 100);
         return (
           <div key={item.feature} className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#FDF8FC] font-medium">
-                <span className="text-[#928997] font-mono mr-2">
+                <span className="text-[#7D7485] font-mono mr-2">
                   {String(idx + 1).padStart(2, '0')}
                 </span>
                 {item.label}
@@ -2001,18 +2077,18 @@ export const FeatureImportanceBars: React.FC<{ items: FeatureImportanceItem[] }>
                 {item.percentage.toFixed(1)}%
               </span>
             </div>
-            <div className="h-3 w-full rounded-full bg-white/[0.045] border border-[rgba(255,210,235,0.14)] p-[1px] overflow-hidden">
+            <div className="h-3.5 w-full rounded-full bg-[#040307] border border-white/[0.06] p-[1px] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${widthPct}%`,
                   background:
                     idx === 0
-                      ? 'linear-gradient(90deg, rgba(245, 166, 204, 0.55) 0%, rgba(248, 198, 223, 0.92) 100%)'
-                      : 'linear-gradient(90deg, rgba(196, 168, 245, 0.42) 0%, rgba(245, 166, 204, 0.78) 100%)',
-                  boxShadow:
-                    '0 0 12px rgba(245, 166, 204, 0.35), inset 0 1px 0 rgba(255,255,255,0.55)',
-                  borderRight: '1px solid rgba(255,255,255,0.85)',
+                      ? 'linear-gradient(90deg, #161119 0%, #322430 100%)'
+                      : 'linear-gradient(90deg, #0E0D14 0%, #241E2B 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+                  border: '1px solid rgba(245, 166, 204, 0.36)',
+                  borderRight: '2px solid #F5A6CC',
                 }}
               />
             </div>
@@ -2024,7 +2100,7 @@ export const FeatureImportanceBars: React.FC<{ items: FeatureImportanceItem[] }>
 };
 
 /**
- * Semi-Circular Glowing Baby-Pink & Lavender Grade Gauge
+ * Semi-Circular Pitch-Black Obsidian Grade Gauge
  */
 export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
   const uid = useId().replace(/:/g, '');
@@ -2037,22 +2113,23 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
   const strokeDashoffset = circumference * (1 - ratio);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="chart-obsidian-well rounded-2xl px-4 pt-3 pb-2 flex flex-col items-center">
       <svg width="240" height="136" viewBox="0 0 240 136" className="overflow-visible">
         <defs>
           <linearGradient id={`gauge_${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#C4A8F5" />
-            <stop offset="52%" stopColor="#F5A6CC" />
-            <stop offset="100%" stopColor="#F8C6DF" />
+            <stop offset="0%" stopColor="#1E1826" />
+            <stop offset="65%" stopColor="#382836" />
+            <stop offset="100%" stopColor="#F5A6CC" />
           </linearGradient>
-          <filter id={`gauge_glow_${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
+
+        <path
+          d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
+          fill="none"
+          stroke="#040307"
+          strokeWidth="16"
+          strokeLinecap="round"
+        />
 
         <path
           d={`M ${cx - radius} ${cy} A ${radius} ${radius} 0 0 1 ${cx + radius} ${cy}`}
@@ -2070,7 +2147,6 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          filter={`url(#gauge_glow_${uid})`}
           style={{ transition: 'stroke-dashoffset 320ms cubic-bezier(0.16, 1, 0.3, 1)' }}
         />
 
@@ -2079,7 +2155,7 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
           y1={cy - radius - 10}
           x2={cx}
           y2={cy - radius + 10}
-          stroke="#FDF8FC"
+          stroke="#F8C6DF"
           strokeWidth="2"
         />
         <text
@@ -2095,7 +2171,7 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
           x={cx - radius}
           y={cy + 20}
           textAnchor="middle"
-          className="fill-[#928997] text-[10px] font-mono"
+          className="fill-[#7D7485] text-[10px] font-mono"
         >
           0
         </text>
@@ -2103,7 +2179,7 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
           x={cx + radius}
           y={cy + 20}
           textAnchor="middle"
-          className="fill-[#928997] text-[10px] font-mono"
+          className="fill-[#7D7485] text-[10px] font-mono"
         >
           20
         </text>
@@ -2120,7 +2196,7 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
           x={cx}
           y={cy + 10}
           textAnchor="middle"
-          className="fill-[#BDB4C3] text-[11px] font-mono"
+          className="fill-[#9C92A4] text-[11px] font-mono"
         >
           out of 20.0
         </text>

@@ -401,22 +401,20 @@ export default function App() {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
-        {/* Top-center warm baby-pink glass sphere */}
-        <div className="absolute -top-24 left-[36%] w-[440px] h-[440px] rounded-full bg-gradient-to-br from-[#F8C6DF]/24 via-[#E88DBB]/14 to-transparent blur-[90px]" />
-        {/* Bottom-left rose-petal glow behind sidebar */}
-        <div className="absolute bottom-[-80px] -left-16 w-[380px] h-[380px] rounded-full bg-gradient-to-tr from-[#F5A6CC]/24 via-[#E88DBB]/14 to-transparent blur-[85px]" />
-        {/* Right-rail soft lavender-pink glass refraction */}
-        <div className="absolute top-[22%] -right-20 w-[390px] h-[390px] rounded-full bg-gradient-to-bl from-[#C4A8F5]/20 via-[#F5A6CC]/14 to-transparent blur-[95px]" />
+        {/* Subtle edge refraction orbs keeping the canvas deep obsidian black */}
+        <div className="absolute -top-28 left-[36%] w-[440px] h-[440px] rounded-full bg-gradient-to-br from-[#F8C6DF]/[0.07] via-[#E88DBB]/[0.04] to-transparent blur-[110px]" />
+        <div className="absolute bottom-[-90px] -left-20 w-[380px] h-[380px] rounded-full bg-gradient-to-tr from-[#F5A6CC]/[0.08] via-[#E88DBB]/[0.04] to-transparent blur-[105px]" />
+        <div className="absolute top-[22%] -right-24 w-[390px] h-[390px] rounded-full bg-gradient-to-bl from-[#C4A8F5]/[0.06] via-[#F5A6CC]/[0.04] to-transparent blur-[115px]" />
         {/* Subtle abstract translucent glass curves */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-35"
+          className="absolute inset-0 w-full h-full opacity-20"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="bg_curve_pink" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#F8C6DF" stopOpacity="0.28" />
-              <stop offset="50%" stopColor="#C4A8F5" stopOpacity="0.10" />
+              <stop offset="0%" stopColor="#F8C6DF" stopOpacity="0.22" />
+              <stop offset="50%" stopColor="#C4A8F5" stopOpacity="0.08" />
               <stop offset="100%" stopColor="#E88DBB" stopOpacity="0.0" />
             </linearGradient>
           </defs>

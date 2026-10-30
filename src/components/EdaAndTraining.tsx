@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BarChart3, RefreshCw, TrendingUp, Trophy } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { BarChart3, PieChart, RefreshCw, TrendingUp, Trophy } from 'lucide-react';
 import { DatasetPayload, EvaluationPayload, ModelKey } from '../types';
 import {
   AgeTrajectoryChart,
@@ -8,6 +8,7 @@ import {
   GradeDistributionChart,
   GroupedBarsChart,
   ModelComparisonGlassChart,
+  PerformanceDonutChart,
   PeriodProgressionChart,
   SculptedBarChart,
   StudyGradeScatterChart,
@@ -27,11 +28,137 @@ export const EdaPage: React.FC<EdaProps> = ({
   evaluation,
 }) => {
   const [scatterX, setScatterX] = useState<'studytime' | 'G2' | 'G1' | 'absences'>('studytime');
+  const [edaPieStyle, setEdaPieStyle] = useState<'pie' | 'donut'>('pie');
   const bestModel = evaluation.models[evaluation.bestModelKey];
   const activeRows = filteredRows.length > 0 ? filteredRows : dataset.rows;
 
+  const gradeTierPieSegments = useMemo(() => {
+    const total = activeRows.length || 1;
+    let high = 0;
+    let mid = 0;
+    let risk = 0;
+    for (const r of activeRows) {
+      const g3 = Number(r.G3 ?? 0);
+      if (g3 >= 14) high += 1;
+      else if (g3 >= 10) mid += 1;
+      else risk += 1;
+    }
+    return [
+      {
+        label: 'High (14–20)',
+        displayValue: `${((high * 100) / total).toFixed(1)}%`,
+        share: (high * 100) / total,
+        tone: 'pink' as const,
+        subtext: `${high} students achieving strong distinction (G3 ≥ 14)`,
+      },
+      {
+        label: 'Pass (10–13)',
+        displayValue: `${((mid * 100) / total).toFixed(1)}%`,
+        share: (mid * 100) / total,
+        tone: 'lavender' as const,
+        subtext: `${mid} students in satisfactory pass range (10–13)`,
+      },
+      {
+        label: 'At-Risk (<10)',
+        displayValue: `${((risk * 100) / total).toFixed(1)}%`,
+        share: (risk * 100) / total,
+        tone: 'blush' as const,
+        subtext: `${risk} students below passing threshold (G3 < 10)`,
+      },
+    ];
+  }, [activeRows]);
+
+  const studySharePieSegments = useMemo(() => {
+    const total = activeRows.length || 1;
+    const tones: ('blush' | 'lavender' | 'pink')[] = ['blush', 'lavender', 'pink'];
+    return analytics.studyVsGrade.map((st, idx) => ({
+      label: st.label,
+      displayValue: `${((st.count * 100) / total).toFixed(1)}%`,
+      share: (st.count * 100) / total,
+      tone: tones[idx % tones.length],
+      subtext: `${st.count} students · Avg G3 ${st.avgG3}/20 · Pass ${st.passRate}%`,
+    }));
+  }, [activeRows.length, analytics.studyVsGrade]);
+
   return (
     <div className="space-y-5">
+      {/* Row 0: Obsidian-Black Smoked Glass Pie Breakdowns */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-6 glass-shell glass-shell-hover rounded-[24px] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg pink-icon-badge flex items-center justify-center shrink-0">
+                <PieChart className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-base font-display font-semibold text-[#FDF8FC]">
+                  Cohort Grade Tier Breakdown
+                </h3>
+                <p className="text-xs text-[#BDB4C3]">
+                  High Distinction (14–20) vs Satisfactory Pass (10–13) vs At-Risk (&lt;10)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center p-0.5 rounded-full bg-[#050408] border border-white/[0.10]">
+              <button
+                type="button"
+                onClick={() => setEdaPieStyle('pie')}
+                className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                  edaPieStyle === 'pie'
+                    ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                    : 'text-[#928997] hover:text-[#FDF8FC]'
+                }`}
+              >
+                Pie
+              </button>
+              <button
+                type="button"
+                onClick={() => setEdaPieStyle('donut')}
+                className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                  edaPieStyle === 'donut'
+                    ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                    : 'text-[#928997] hover:text-[#FDF8FC]'
+                }`}
+              >
+                Donut
+              </button>
+            </div>
+          </div>
+          <PerformanceDonutChart
+            centerLabel="Cohort"
+            centerValue={`${activeRows.length}`}
+            variant={edaPieStyle}
+            segments={gradeTierPieSegments}
+          />
+        </div>
+
+        <div className="lg:col-span-6 glass-shell glass-shell-hover rounded-[24px] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg lavender-icon-badge flex items-center justify-center shrink-0">
+                <PieChart className="w-4 h-4" />
+              </span>
+              <div>
+                <h3 className="text-base font-display font-semibold text-[#FDF8FC]">
+                  Weekly Study Commitment Share
+                </h3>
+                <p className="text-xs text-[#BDB4C3]">
+                  Proportion of students across UCI weekly study-hour brackets
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono text-[#928997] tabular-nums">
+              Pass {analytics.passRate.toFixed(1)}%
+            </span>
+          </div>
+          <PerformanceDonutChart
+            centerLabel="Avg G3"
+            centerValue={analytics.avgG3.toFixed(2)}
+            variant={edaPieStyle}
+            segments={studySharePieSegments}
+          />
+        </div>
+      </div>
       {/* Row 1: Full 0-20 Final Grade Histogram + Period Trajectory (G1 -> G2 -> G3) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-7 glass-shell glass-shell-hover rounded-[24px] p-6">

@@ -75,6 +75,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
   const [distGradeCol, setDistGradeCol] = useState<'G3' | 'G2' | 'G1'>('G3');
   const [compMetric, setCompMetric] = useState<'r2' | 'cv' | 'mae' | 'rmse'>('r2');
   const [scatterField, setScatterField] = useState<'G2' | 'studytime' | 'G1' | 'absences'>('G2');
+  const [pieMode, setPieMode] = useState<'pie' | 'donut'>('pie');
 
   const activeRows = filteredRows.length > 0 ? filteredRows : dataset.rows;
 
@@ -231,7 +232,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
         <section className="glass-shell rounded-[24px] px-6 py-5 flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-12 -top-12 w-56 h-56 rounded-full bg-[#F5A6CC]/15 blur-3xl"
+            className="pointer-events-none absolute -right-12 -top-12 w-56 h-56 rounded-full bg-[#F5A6CC]/[0.05] blur-3xl"
           />
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 rounded-2xl pink-icon-badge flex items-center justify-center shrink-0">
@@ -439,7 +440,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
           </div>
 
           <div className="lg:col-span-5 glass-shell glass-shell-hover rounded-[24px] p-5 flex flex-col justify-between">
-            <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2.5">
                 <span className="w-7 h-7 rounded-lg pink-icon-badge flex items-center justify-center">
                   <TrendingUp className="w-3.5 h-3.5" />
@@ -448,19 +449,46 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   Performance Overview
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={() => onNavigate('risk')}
-                className="text-[11px] text-[#F8C6DF] hover:text-[#FDF8FC] transition-colors whitespace-nowrap"
-              >
-                Risk Radar ({evaluation.atRiskCount}) →
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center p-0.5 rounded-full bg-[#050408] border border-white/[0.10]">
+                  <button
+                    type="button"
+                    onClick={() => setPieMode('pie')}
+                    className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                      pieMode === 'pie'
+                        ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                        : 'text-[#928997] hover:text-[#FDF8FC]'
+                    }`}
+                  >
+                    Pie
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPieMode('donut')}
+                    className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                      pieMode === 'donut'
+                        ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                        : 'text-[#928997] hover:text-[#FDF8FC]'
+                    }`}
+                  >
+                    Donut
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('risk')}
+                  className="text-[11px] text-[#F8C6DF] hover:text-[#FDF8FC] transition-colors whitespace-nowrap"
+                >
+                  Risk ({evaluation.atRiskCount}) →
+                </button>
+              </div>
             </div>
 
             <div className="my-auto">
               <PerformanceDonutChart
                 centerLabel="Pass"
                 centerValue={`${analytics.passRate.toFixed(1)}%`}
+                variant={pieMode}
                 segments={[
                   {
                     label: 'Pass (G3 ≥ 10)',
@@ -601,12 +629,37 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   Gender-wise Performance
                 </h2>
               </div>
+              <div className="flex items-center p-0.5 rounded-full bg-[#050408] border border-white/[0.10]">
+                <button
+                  type="button"
+                  onClick={() => setPieMode('pie')}
+                  className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                    pieMode === 'pie'
+                      ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                      : 'text-[#928997] hover:text-[#FDF8FC]'
+                  }`}
+                >
+                  Pie
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPieMode('donut')}
+                  className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
+                    pieMode === 'donut'
+                      ? 'bg-[#1D1622] text-[#F8C6DF] border border-[#F5A6CC]/40'
+                      : 'text-[#928997] hover:text-[#FDF8FC]'
+                  }`}
+                >
+                  Donut
+                </button>
+              </div>
             </div>
 
             <div className="my-auto">
               <PerformanceDonutChart
                 centerLabel="Avg Grade"
                 centerValue={analytics.avgG3.toFixed(2)}
+                variant={pieMode}
                 segments={[
                   {
                     label: 'Female',
@@ -641,7 +694,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
         <div className="glass-kpi rounded-[24px] p-6 relative overflow-hidden">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-8 -top-8 w-36 h-36 rounded-full bg-[#F5A6CC]/22 blur-2xl"
+            className="pointer-events-none absolute -right-8 -top-8 w-36 h-36 rounded-full bg-[#F5A6CC]/[0.07] blur-2xl"
           />
           <div className="w-11 h-11 rounded-2xl pink-icon-badge flex items-center justify-center mb-4">
             <Sparkles className="w-5 h-5 text-[#FDF8FC]" />
