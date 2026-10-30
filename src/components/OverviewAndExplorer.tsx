@@ -32,6 +32,7 @@ import {
 import { exportRowsToCsv } from '../utils/analytics';
 import {
   GradeRangeDistributionChart,
+  KpiSparkPoint,
   ModelComparisonGlassChart,
   PerformanceDonutChart,
   RoseSparkline,
@@ -131,6 +132,116 @@ export const OverviewPage: React.FC<OverviewProps> = ({
       internetText: `Yes (${internetPct}%)`,
     };
   }, [activeRows, dataset.datasetKey]);
+
+  // Cohort-relative distributions & trends for the 4 Recharts KPI Sparklines
+  const kpiSparkData = useMemo(() => {
+    const total = activeRows.length || 1;
+
+    // 1. Total Students: Relative cohort distribution across student age brackets
+    const ageBuckets = [
+      { label: 'Age 15', match: (a: number) => a <= 15 },
+      { label: 'Age 16', match: (a: number) => a === 16 },
+      { label: 'Age 17', match: (a: number) => a === 17 },
+      { label: 'Age 18', match: (a: number) => a === 18 },
+      { label: 'Age 19+', match: (a: number) => a >= 19 },
+    ];
+    const studentsByAge: KpiSparkPoint[] = ageBuckets.map((b) => {
+      const cnt = activeRows.filter((r) => b.match(Number(r.age ?? 16))).length;
+      const pct = Math.round((cnt * 100) / total);
+      return {
+        label: b.label,
+        value: cnt,
+        formatted: `${cnt} (${pct}%)`,
+      };
+    });
+
+    // 2. Average Final Grade: Mean grade trend across study-hour tiers (fallback: G1 -> G2 -> G3 progression)
+    const populatedStudy = analytics.studyVsGrade.filter((s) => s.count > 0);
+    let avgGradeTrend: KpiSparkPoint[];
+    if (populatedStudy.length >= 3) {
+      avgGradeTrend = populatedStudy.map((s) => ({
+        label: `Study ${s.label}`,
+        value: Number(s.avgG3.toFixed(2)),
+        formatted: `${s.avgG3.toFixed(2)} / 20`,
+      }));
+    } else {
+      const meanOf = (col: 'G1' | 'G2' | 'G3') => {
+        const sum = activeRows.reduce((acc, r) => acc + Number(r[col] ?? 0), 0);
+        return Number((sum / total).toFixed(2));
+      };
+      const g1 = meanOf('G1');
+      const g2 = meanOf('G2');
+      const g3 = meanOf('G3');
+      avgGradeTrend = [
+        { label: 'Period G1', value: g1, formatted: `${g1.toFixed(2)} / 20` },
+        { label: 'Period G2', value: g2, formatted: `${g2.toFixed(2)} / 20` },
+        { label: 'Final G3', value: g3, formatted: `${g3.toFixed(2)} / 20` },
+      ];
+    }
+
+    // 3. Pass Percentage: Cohort pass-rate (%) trend across absence brackets
+    const absDefs = [
+      { label: '0 Abs', min: 0, max: 0 },
+      { label: '1–3 Abs', min: 1, max: 3 },
+      { label: '4–7 Abs', min: 4, max: 7 },
+      { label: '8–14 Abs', min: 8, max: 14 },
+      { label: '15+ Abs', min: 15, max: 999 },
+    ];
+    const passRateTrend: KpiSparkPoint[] = [];
+    for (const ab of absDefs) {
+      const sub = activeRows.filter((r) => {
+        const a = Number(r.absences ?? 0);
+        return a >= ab.min && a <= ab.max;
+      });
+      if (!sub.length) continue;
+      const passCnt = sub.filter((r) => Number(r.G3 ?? 0) >= 10).length;
+      const rate = Number(((passCnt * 100) / sub.length).toFixed(1));
+      passRateTrend.push({
+        label: ab.label,
+        value: rate,
+        formatted: `${rate.toFixed(1)}%`,
+      });
+    }
+
+    // 4. Highest Grade: Cohort G3 percentile curve culminating at Max (Highest Grade)
+    const sortedG3 = activeRows
+      .map((r) => Number(r.G3 ?? 0))
+      .sort((a, b) => a - b);
+    const pickQuantile = (q: number) => {
+      if (!sortedG3.length) return 0;
+      const idx = Math.min(sortedG3.length - 1, Math.max(0, Math.round(q * (sortedG3.length - 1))));
+      return sortedG3[idx];
+    };
+    const quantiles: { label: string; q: number }[] = [
+      { label: 'P10', q: 0.1 },
+      { label: 'P25', q: 0.25 },
+      { label: 'Median', q: 0.5 },
+      { label: 'P75', q: 0.75 },
+      { label: 'P90', q: 0.9 },
+      { label: 'Max', q: 1.0 },
+    ];
+    const highestQuantileCurve: KpiSparkPoint[] = quantiles.map((qt) => {
+      const val = pickQuantile(qt.q);
+      return {
+        label: qt.label,
+        value: val,
+        formatted: `${val} / 20`,
+      };
+    });
+
+    return {
+      studentsByAge,
+      avgGradeTrend,
+      passRateTrend:
+        passRateTrend.length >= 2
+          ? passRateTrend
+          : [
+              { label: 'Cohort', value: analytics.passRate, formatted: `${analytics.passRate.toFixed(1)}%` },
+              { label: 'Target', value: Math.min(100, analytics.passRate), formatted: `${analytics.passRate.toFixed(1)}%` },
+            ],
+      highestQuantileCurve,
+    };
+  }, [activeRows, analytics.studyVsGrade, analytics.passRate]);
 
   // Dynamic real Key Insights computed from active dataset analytics
   const keyInsights = useMemo(() => {
@@ -286,7 +397,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
           </div>
         </section>
 
-        {/* 2. Four Premium Smoked-Glass KPI Cards */}
+        {/* 2. Four Premium Smoked-Glass KPI Cards with Recharts Cohort Sparklines */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* KPI 1: Total Students */}
           <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
@@ -309,15 +420,13 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                       : '100%'}
                   </span>
                 </div>
-                <div className="text-[10.5px] text-[#928997]">(from dataset)</div>
+                <div className="text-[10.5px] text-[#928997]">Age distribution</div>
               </div>
               <RoseSparkline
                 id="kpi_total_students"
-                values={
-                  analytics.agePerformance.length >= 2
-                    ? analytics.agePerformance.map((a) => a.count)
-                    : [42, 88, 104, 96, 65]
-                }
+                variant="bar"
+                accent="pink"
+                data={kpiSparkData.studentsByAge}
               />
             </div>
           </div>
@@ -342,15 +451,13 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   <ArrowUpRight className="w-3 h-3" />
                   <span>Med {analytics.medianG3}</span>
                 </div>
-                <div className="text-[10.5px] text-[#928997]">(from dataset)</div>
+                <div className="text-[10.5px] text-[#928997]">Study-tier trend</div>
               </div>
               <RoseSparkline
                 id="kpi_avg_grade"
-                values={
-                  analytics.studyVsGrade.length >= 2
-                    ? analytics.studyVsGrade.map((s) => s.avgG3)
-                    : [9.8, 10.3, 11.4, 11.9]
-                }
+                variant="area"
+                accent="blush"
+                data={kpiSparkData.avgGradeTrend}
               />
             </div>
           </div>
@@ -375,15 +482,13 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   <ArrowUpRight className="w-3 h-3" />
                   <span>{Math.round((analytics.passRate * analytics.totalStudents) / 100)} pass</span>
                 </div>
-                <div className="text-[10.5px] text-[#928997]">(G3 ≥ 10)</div>
+                <div className="text-[10.5px] text-[#928997]">Attendance trend</div>
               </div>
               <RoseSparkline
                 id="kpi_pass_pct"
-                values={
-                  analytics.studyVsGrade.length >= 2
-                    ? analytics.studyVsGrade.map((s) => s.passRate)
-                    : [58, 65, 74, 79]
-                }
+                variant="area"
+                accent="lavender"
+                data={kpiSparkData.passRateTrend}
               />
             </div>
           </div>
@@ -402,11 +507,16 @@ export const OverviewPage: React.FC<OverviewProps> = ({
             <div className="mt-4 flex items-end justify-between gap-2">
               <div>
                 <div className="text-[11px] font-mono font-medium text-[#F8C6DF] tabular-nums">
-                  Scale 0–20
+                  P90 {kpiSparkData.highestQuantileCurve[4]?.value ?? analytics.highestG3} / 20
                 </div>
-                <div className="text-[10.5px] text-[#928997]">(in dataset)</div>
+                <div className="text-[10.5px] text-[#928997]">Cohort percentiles</div>
               </div>
-              <RoseSparkline id="kpi_highest_grade" values={[14, 16, 15, 18, 19, 20]} />
+              <RoseSparkline
+                id="kpi_highest_grade"
+                variant="area"
+                accent="pink"
+                data={kpiSparkData.highestQuantileCurve}
+              />
             </div>
           </div>
         </section>

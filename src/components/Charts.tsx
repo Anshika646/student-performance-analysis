@@ -1,4 +1,14 @@
 import React, { useId, useMemo, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  YAxis,
+} from 'recharts';
 import { FeatureImportanceItem, ModelReport, ResidualBin, ScatterPoint } from '../types';
 
 type GlassTone = 'pink' | 'lavender' | 'periwinkle' | 'blush';
@@ -200,42 +210,159 @@ function describePieWedge(
   return `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
 }
 
+export interface KpiSparkPoint {
+  label: string;
+  value: number;
+  formatted?: string;
+}
+
 /**
- * Sleek Micro-Trend Sparkline on Dark Cards
+ * Stylized Obsidian-Glass KPI Sparkline powered by Recharts
+ * Supports smooth monotone Area trend curves and sculpted Cohort Distribution Bars.
  */
 export const RoseSparkline: React.FC<{
-  values: number[];
   id: string;
+  data?: KpiSparkPoint[];
+  values?: number[];
+  variant?: 'area' | 'bar';
+  accent?: 'pink' | 'blush' | 'lavender';
   width?: number;
   height?: number;
-}> = ({ values, id, width = 82, height = 30 }) => {
-  const pts = values.length >= 2 ? values : [4, 6, 5, 8, 7, 10];
-  const min = Math.min(...pts);
-  const max = Math.max(...pts);
-  const span = max - min || 1;
-  const coords = pts.map((v, i) => ({
-    x: (i / (pts.length - 1)) * width,
-    y: height - 4 - ((v - min) / span) * (height - 9),
-  }));
+}> = ({
+  id,
+  data,
+  values,
+  variant = 'area',
+  accent = 'pink',
+  width = 114,
+  height = 42,
+}) => {
+  const uid = useId().replace(/:/g, '');
+  const gradId = `recharts_spark_${id}_${uid}`;
 
-  let d = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
-  for (let i = 0; i < coords.length - 1; i++) {
-    const cx = (coords[i].x + coords[i + 1].x) / 2;
-    d += ` C ${cx.toFixed(1)} ${coords[i].y.toFixed(1)}, ${cx.toFixed(1)} ${coords[i + 1].y.toFixed(1)}, ${coords[i + 1].x.toFixed(1)} ${coords[i + 1].y.toFixed(1)}`;
-  }
-  const area = `${d} L ${width} ${height} L 0 ${height} Z`;
+  const chartData: KpiSparkPoint[] = useMemo(() => {
+    if (data && data.length >= 2) {
+      return data;
+    }
+    const fallback = values && values.length >= 2 ? values : [4, 6, 5, 8, 7, 10];
+    return fallback.map((v, idx) => ({
+      label: `#${idx + 1}`,
+      value: Number(v),
+      formatted: String(v),
+    }));
+  }, [data, values]);
+
+  const { domainMin, domainMax, peakIdx } = useMemo(() => {
+    const nums = chartData.map((d) => d.value);
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    const span = max - min || Math.max(1, max * 0.2);
+    let bestIdx = nums.length - 1;
+    for (let i = 0; i < nums.length; i++) {
+      if (nums[i] >= nums[bestIdx]) bestIdx = i;
+    }
+    return {
+      domainMin: variant === 'bar' ? 0 : Math.max(0, min - span * 0.25),
+      domainMax: max + span * 0.18,
+      peakIdx: bestIdx,
+    };
+  }, [chartData, variant]);
+
+  const strokeColor =
+    accent === 'lavender' ? '#C4A8F5' : accent === 'blush' ? '#F8C6DF' : '#F5A6CC';
+
+  const renderTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: readonly any[];
+  }) => {
+    if (!active || !payload || !payload.length) return null;
+    const pt = payload[0]?.payload as KpiSparkPoint | undefined;
+    if (!pt) return null;
+    return (
+      <div className="glass-tooltip px-2.5 py-1 rounded-lg text-[10px] leading-tight font-mono tabular-nums whitespace-nowrap pointer-events-none">
+        <span className="text-[#BDB4C3]">{pt.label}: </span>
+        <span className="font-semibold text-[#F8C6DF]">
+          {pt.formatted ?? pt.value}
+        </span>
+      </div>
+    );
+  };
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible shrink-0">
-      <defs>
-        <linearGradient id={`spark_${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#07060A" stopOpacity="0.0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill={`url(#spark_${id})`} />
-      <path d={d} fill="none" stroke="#F5A6CC" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
+    <div
+      style={{ width, height }}
+      className="shrink-0 rounded-xl bg-[#050408]/90 border border-white/[0.06] px-1.5 py-1 shadow-[inset_0_1px_8px_rgba(0,0,0,0.75)]"
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        {variant === 'bar' ? (
+          <BarChart data={chartData} margin={{ top: 3, right: 2, bottom: 1, left: 2 }} barCategoryGap="22%">
+            <defs>
+              <linearGradient id={`${gradId}_bar`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3B2B39" stopOpacity={0.98} />
+                <stop offset="100%" stopColor="#0D0A12" stopOpacity={0.95} />
+              </linearGradient>
+              <linearGradient id={`${gradId}_bar_peak`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.85} />
+                <stop offset="100%" stopColor="#1D1522" stopOpacity={0.95} />
+              </linearGradient>
+            </defs>
+            <YAxis hide domain={[domainMin, domainMax]} />
+            <RechartsTooltip
+              content={renderTooltip}
+              cursor={{ fill: 'rgba(248, 198, 223, 0.06)' }}
+              position={{ y: -32 }}
+              allowEscapeViewBox={{ x: true, y: true }}
+            />
+            <Bar dataKey="value" radius={[3, 3, 1, 1]} isAnimationActive={false}>
+              {chartData.map((entry, idx) => (
+                <Cell
+                  key={`${entry.label}_${idx}`}
+                  fill={idx === peakIdx ? `url(#${gradId}_bar_peak)` : `url(#${gradId}_bar)`}
+                  stroke={idx === peakIdx ? '#FDF8FC' : strokeColor}
+                  strokeOpacity={idx === peakIdx ? 0.85 : 0.45}
+                  strokeWidth={0.9}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        ) : (
+          <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 2, left: 4 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.34} />
+                <stop offset="65%" stopColor="#1B1420" stopOpacity={0.14} />
+                <stop offset="100%" stopColor="#050408" stopOpacity={0.0} />
+              </linearGradient>
+            </defs>
+            <YAxis hide domain={[domainMin, domainMax]} />
+            <RechartsTooltip
+              content={renderTooltip}
+              cursor={{ stroke: 'rgba(248, 198, 223, 0.28)', strokeWidth: 1, strokeDasharray: '2 2' }}
+              position={{ y: -32 }}
+              allowEscapeViewBox={{ x: true, y: true }}
+            />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={strokeColor}
+              strokeWidth={1.85}
+              fill={`url(#${gradId})`}
+              isAnimationActive={false}
+              dot={false}
+              activeDot={{
+                r: 3.2,
+                fill: '#FDF8FC',
+                stroke: strokeColor,
+                strokeWidth: 1.6,
+              }}
+            />
+          </AreaChart>
+        )}
+      </ResponsiveContainer>
+    </div>
   );
 };
 
