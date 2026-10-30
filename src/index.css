@@ -7,36 +7,82 @@
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   }
 
+  html,
   body {
     font-family: var(--font-sans);
-    background: radial-gradient(circle at 12% 8%, #fce4f0 0%, #f8ecf2 42%, #f2e7ef 100%);
-    color: #1f1823;
+    background-color: #0d0a10;
+    background-image:
+      radial-gradient(circle at 8% 4%, rgba(182, 96, 142, 0.20) 0%, rgba(18, 13, 22, 0) 38%),
+      radial-gradient(circle at 94% 52%, rgba(216, 130, 176, 0.14) 0%, rgba(18, 13, 22, 0) 36%),
+      radial-gradient(circle at 82% 96%, rgba(164, 92, 138, 0.18) 0%, rgba(13, 10, 16, 0) 42%),
+      linear-gradient(180deg, #120d16 0%, #0d0a10 55%, #0b080e 100%);
+    background-attachment: fixed;
+    color: #f7f2f9;
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
 
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  select option {
+    background-color: #19131f;
+    color: #f7f2f9;
+  }
 }
 
-/* Custom subtle scrollbars for dark glass tables */
+/* Sleek Dark Smoked-Glass Surface Utilities */
+.glass-shell {
+  background: linear-gradient(145deg, rgba(36, 26, 42, 0.62) 0%, rgba(20, 15, 25, 0.78) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-kpi {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(196, 110, 156, 0.16) 0%, transparent 58%),
+    linear-gradient(160deg, rgba(38, 29, 44, 0.72) 0%, rgba(21, 16, 26, 0.82) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-subcard {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.018) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle dark glass scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(145, 118, 152, 0.32);
+  background: rgba(233, 155, 195, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(224, 135, 178, 0.55);
+  background: rgba(233, 155, 195, 0.48);
 }

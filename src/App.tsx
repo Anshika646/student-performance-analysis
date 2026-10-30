@@ -1,17 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Activity,
+  ArrowUpRight,
   BarChart3,
-  BookOpen,
-  BrainCircuit,
   Code2,
-  Compass,
-  Database,
+  Download,
   GraduationCap,
-  LayoutDashboard,
-  Menu,
+  Plus,
   RotateCcw,
-  Sparkles,
-  Upload,
+  Search,
   X,
 } from 'lucide-react';
 import {
@@ -25,7 +22,7 @@ import {
   StudentInputProfile,
 } from './types';
 import { computeDynamicAnalytics, filterDatasetRows } from './utils/analytics';
-import { RoseSparkline } from './components/Charts';
+import { CircularMetricRing, RoseSparkline } from './components/Charts';
 import { ExplorerPage, OverviewPage } from './components/OverviewAndExplorer';
 import { EdaPage, TrainingPage } from './components/EdaAndTraining';
 import {
@@ -36,43 +33,54 @@ import {
 
 const PAGE_META: Record<
   PageId,
-  { navLabel: string; heroTop: string; heroAccent: string; icon: React.FC<{ className?: string }> }
+  {
+    navLabel: string;
+    heroTop: string;
+    heroAccent: string;
+    subtitle: string;
+  }
 > = {
   overview: {
     navLabel: 'Overview',
     heroTop: 'Student',
-    heroAccent: 'Performance',
-    icon: LayoutDashboard,
+    heroAccent: 'Analytics',
+    subtitle:
+      'Predict final grades, explore cohort patterns, and evaluate supervised ML models on the UCI dataset.',
   },
   explorer: {
-    navLabel: 'Dataset Explorer',
+    navLabel: 'Dataset',
     heroTop: 'Dataset',
     heroAccent: 'Explorer',
-    icon: Database,
+    subtitle:
+      'Inspect clean UCI records, missing-value imputation, data types, and summary statistics.',
   },
   eda: {
-    navLabel: 'Exploratory Data Analysis',
+    navLabel: 'Visualizations',
     heroTop: 'Exploratory',
-    heroAccent: 'Analytics',
-    icon: BarChart3,
+    heroAccent: 'Analysis',
+    subtitle:
+      'Ten interactive cohort visualizations updating dynamically across demographic and study filters.',
   },
   training: {
-    navLabel: 'Model Training',
+    navLabel: 'ML Training',
     heroTop: 'Supervised',
-    heroAccent: 'Training',
-    icon: BrainCircuit,
+    heroAccent: 'Models',
+    subtitle:
+      'Train and compare Linear Regression, Random Forest, and Decision Tree Regressors without leakage.',
   },
   prediction: {
-    navLabel: 'Student Prediction',
-    heroTop: 'Academic',
+    navLabel: 'Prediction',
+    heroTop: 'Student',
     heroAccent: 'Prediction',
-    icon: GraduationCap,
+    subtitle:
+      'Run live Python ML grade inference with factor contributions and academic improvement guidance.',
   },
   insights: {
-    navLabel: 'Model Insights',
+    navLabel: 'Insights',
     heroTop: 'Model',
     heroAccent: 'Diagnostics',
-    icon: Compass,
+    subtitle:
+      'Evaluate actual-vs-predicted test alignment, residual error symmetry, and feature importance.',
   },
 };
 
@@ -100,7 +108,6 @@ const INITIAL_STUDENT: StudentInputProfile = {
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageId>('overview');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Dataset & Evaluations from Python ML backend
   const [datasetKey, setDatasetKey] = useState<'mat' | 'por' | 'custom'>('mat');
@@ -121,8 +128,9 @@ export default function App() {
     nEstimators: 40,
   });
 
-  // Dynamic Cohort Filters
+  // Dynamic Cohort Filters & Search
   const [filters, setFilters] = useState<CohortFilters>(DEFAULT_FILTERS);
+  const [globalSearch, setGlobalSearch] = useState<string>('');
 
   // Student Prediction State
   const [studentInput, setStudentInput] = useState<StudentInputProfile>(INITIAL_STUDENT);
@@ -168,13 +176,11 @@ export default function App() {
     [hyperparams]
   );
 
-  // Initial load on mount
   useEffect(() => {
     loadBundle('mat', null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Run live prediction whenever dataset, mode, or selectedModel updates
   const executePrediction = useCallback(
     async (profileOverride?: StudentInputProfile) => {
       const targetProfile = profileOverride || studentInput;
@@ -267,7 +273,6 @@ export default function App() {
     }
   };
 
-  // Filtered rows & dynamic EDA recalculation
   const filteredRows = useMemo(() => {
     if (!dataset) return [];
     return filterDatasetRows(dataset.rows, filters);
@@ -286,6 +291,10 @@ export default function App() {
       : evaluations.without_grades
     : null;
 
+  const bestModelMetrics = activeEvaluation
+    ? activeEvaluation.models[activeEvaluation.bestModelKey].testMetrics
+    : null;
+
   const hasActiveFilters =
     filters.school !== 'all' ||
     filters.sex !== 'all' ||
@@ -296,93 +305,292 @@ export default function App() {
   const pageMeta = PAGE_META[activePage];
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row text-[#1F1823]">
-      {/* Left Glass Sidebar Navigation (All 6 Required Pages) */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white/75 backdrop-blur-2xl border-r border-white/90 p-5 flex flex-col justify-between transition-transform duration-200 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between mb-7 px-1">
-            <button
-              onClick={() => setActivePage('overview')}
-              className="flex items-center gap-2.5 text-left"
-            >
-              <div className="w-9 h-9 rounded-xl bg-[#221B25] text-[#FAD6E8] font-display font-bold text-base flex items-center justify-center">
-                ep
-              </div>
-              <span className="text-lg font-display font-bold tracking-tight text-[#1F1823]">
-                EduPulse
-              </span>
-            </button>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-[#55425E]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+    <div className="min-h-screen flex flex-col text-[#F7F2F9]">
+      {/* Sleek Dark Glass Top Bar (3-Zone Contract matching image_8cdbd167.png) */}
+      <header className="sticky top-0 z-30 bg-[#100C15]/80 backdrop-blur-2xl border-b border-white/[0.07]">
+        <div className="max-w-[1440px] mx-auto px-5 lg:px-8 py-3.5 flex items-center justify-between gap-8">
+          {/* Zone 1: Brand Monogram */}
+          <button
+            type="button"
+            onClick={() => setActivePage('overview')}
+            className="text-2xl font-display font-bold tracking-tight text-[#FAD8EA] whitespace-nowrap shrink-0"
+          >
+            ep
+          </button>
 
-          <nav className="space-y-1.5">
+          {/* Zone 2: Sleek Single-Line Navigation Links */}
+          <nav className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto no-scrollbar py-0.5">
             {(Object.keys(PAGE_META) as PageId[]).map((pid) => {
-              const Icon = PAGE_META[pid].icon;
               const isActive = activePage === pid;
               return (
                 <button
                   key={pid}
-                  onClick={() => {
-                    setActivePage(pid);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap ${
+                  type="button"
+                  onClick={() => setActivePage(pid)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
                     isActive
-                      ? 'bg-[#221B25] text-white shadow-[0_8px_20px_rgba(34,27,37,0.2)]'
-                      : 'text-[#55425E] hover:bg-[#F7E5F0] hover:text-[#1F1823]'
+                      ? 'bg-[#8F5373]/65 border border-[#F4B6D6]/40 text-white shadow-[0_0_20px_rgba(244,182,214,0.16)]'
+                      : 'text-[#A89BB2] hover:text-white'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{PAGE_META[pid].navLabel}</span>
+                  {PAGE_META[pid].navLabel}
                 </button>
               );
             })}
           </nav>
-        </div>
 
-        {/* Bottom Dataset Switcher & Python Source Trigger */}
-        <div className="space-y-3 pt-4 border-t border-[#EADCE5]">
-          <div className="rounded-2xl bg-[#F7E7F1]/90 p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-[#4B3954]">
+          {/* Zone 3: Primary Action (UCI CSV Download) */}
+          <div className="shrink-0">
+            <a
+              href={`/api/dataset/download/${datasetKey === 'por' ? 'por' : 'mat'}`}
+              download={datasetKey === 'por' ? 'student-por.csv' : 'student-mat.csv'}
+              className="px-4 py-1.5 rounded-full bg-white/[0.06] hover:bg-[#F4B6D6] hover:text-[#17101C] border border-white/12 text-xs font-medium text-[#EDE5F2] transition-all whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
               <span>UCI Dataset</span>
-              <span className="font-mono tabular-nums">
-                {dataset ? `${dataset.rowCount} rows` : '...'}
-              </span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Sleek Glass Dashboard Canvas */}
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-5 lg:px-8 py-6 space-y-5">
+        {errorBanner && (
+          <div className="rounded-2xl bg-rose-950/90 text-rose-100 border border-rose-400/30 px-4 py-3 text-xs flex items-center justify-between">
+            <span>{errorBanner}</span>
+            <button onClick={() => setErrorBanner(null)} className="p-1 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Upper Hero Glass Section: Two-Tone Title + Circular Ring + 3 Smoked-Glass KPI Cards */}
+        <section className="glass-shell rounded-[28px] p-6 lg:p-7">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
+            {/* Left Hero Copy + Donut Ring (Exact Match to Reference Hero Left) */}
+            <div className="xl:col-span-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="space-y-2.5 max-w-[290px]">
+                <div className="text-[11px] font-medium tracking-wider text-[#C7B9D1]">
+                  {dataset ? dataset.datasetLabel : 'UCI Student Performance'}
+                </div>
+
+                <h1
+                  className="font-display font-semibold tracking-tight leading-[1.06]"
+                  style={{ fontSize: 'clamp(2.1rem, 3.2vw, 3.05rem)', textWrap: 'balance' }}
+                >
+                  <span className="block text-white">{pageMeta.heroTop}</span>
+                  <span className="block text-[#E99BC3]">{pageMeta.heroAccent}</span>
+                </h1>
+
+                <p className="text-xs text-[#9E90A8] leading-relaxed">
+                  {pageMeta.subtitle}
+                </p>
+              </div>
+
+              {/* Circular Metric Ring right next to Title */}
+              <div className="flex items-center gap-3 self-start sm:self-center">
+                <CircularMetricRing percentage={analytics.passRate} label="pass %" />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+
+            {/* Right 3 Dark Smoked-Glass KPI Cards */}
+            <div className="xl:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* KPI Card 1 */}
+              <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+
+                <div>
+                  <div className="text-xs text-[#A89BB2]">Average Final Grade</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                      {analytics.avgG3.toFixed(2)}
+                    </span>
+                    <sup className="text-[11px] font-mono text-[#9E90A8]">/20</sup>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                      <ArrowUpRight className="w-3 h-3" />
+                      <span>Max {analytics.highestG3}</span>
+                    </div>
+                    <div className="text-[10px] text-[#7F708A]">out of 20 pts</div>
+                  </div>
+                  <RoseSparkline
+                    id="hero_kpi_1"
+                    values={
+                      analytics.studyVsGrade.length >= 2
+                        ? analytics.studyVsGrade.map((s) => s.avgG3)
+                        : [9.4, 10.2, 11.4, 11.9]
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* KPI Card 2 */}
+              <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+
+                <div>
+                  <div className="text-xs text-[#A89BB2]">Cohort Pass Rate</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                      {analytics.passRate.toFixed(1)}
+                    </span>
+                    <sup className="text-[11px] font-mono text-[#9E90A8]">%</sup>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                      <ArrowUpRight className="w-3 h-3" />
+                      <span>n = {analytics.totalStudents}</span>
+                    </div>
+                    <div className="text-[10px] text-[#7F708A]">G3 ≥ 10 pass</div>
+                  </div>
+                  <RoseSparkline
+                    id="hero_kpi_2"
+                    values={
+                      analytics.agePerformance.length >= 2
+                        ? analytics.agePerformance.map((a) => a.passRate)
+                        : [62, 68, 71, 67]
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* KPI Card 3 */}
+              <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
+                <div className="w-9 h-9 rounded-xl bg-[#472D40]/80 border border-[#F4B6D6]/20 flex items-center justify-center text-[#F4B6D6] mb-3.5">
+                  <Activity className="w-4 h-4" />
+                </div>
+
+                <div>
+                  <div className="text-xs text-[#A89BB2]">Best Test R² Score</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl lg:text-[28px] font-display font-semibold text-white tabular-nums">
+                      {bestModelMetrics ? bestModelMetrics.r2.toFixed(3) : '...'}
+                    </span>
+                    <sup className="text-[11px] font-mono text-[#9E90A8]">R²</sup>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-mono font-medium text-emerald-400 flex items-center gap-0.5 tabular-nums">
+                      <ArrowUpRight className="w-3 h-3" />
+                      <span>RMSE {bestModelMetrics ? bestModelMetrics.rmse.toFixed(2) : '...'}</span>
+                    </div>
+                    <div className="text-[10px] text-[#7F708A]">
+                      {includeGrades ? 'with G1 & G2' : 'habits only'}
+                    </div>
+                  </div>
+                  <RoseSparkline id="hero_kpi_3" values={[0.66, 0.74, 0.77, 0.85]} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Middle Sleek Dark Glass Filter & Utility Bar (Exact Match to Reference Middle Pill Strip) */}
+        <section className="glass-shell rounded-[22px] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* All Reset Pill */}
+            <button
+              type="button"
+              onClick={() => setFilters(DEFAULT_FILTERS)}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
+                !hasActiveFilters
+                  ? 'bg-[#F4B6D6] text-[#17101C] shadow-[0_0_18px_rgba(244,182,214,0.3)]'
+                  : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
+              }`}
+            >
+              All
+            </button>
+
+            {/* School GP / MS */}
+            {(['GP', 'MS'] as const).map((sch) => (
               <button
-                onClick={() => handleSwitchDataset('mat')}
-                className={`py-1.5 rounded-xl text-[11px] font-semibold transition-colors ${
-                  datasetKey === 'mat'
-                    ? 'bg-[#221B25] text-white'
-                    : 'bg-white/80 text-[#4B3954] hover:bg-white'
+                key={sch}
+                type="button"
+                onClick={() =>
+                  setFilters((f) => ({ ...f, school: f.school === sch ? 'all' : sch }))
+                }
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                  filters.school === sch
+                    ? 'bg-[#F4B6D6] text-[#17101C] font-semibold'
+                    : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
                 }`}
               >
-                Math (395)
+                School {sch}
               </button>
+            ))}
+
+            {/* Gender F / M */}
+            {(['F', 'M'] as const).map((sx) => (
               <button
-                onClick={() => handleSwitchDataset('por')}
-                className={`py-1.5 rounded-xl text-[11px] font-semibold transition-colors ${
-                  datasetKey === 'por'
-                    ? 'bg-[#221B25] text-white'
-                    : 'bg-white/80 text-[#4B3954] hover:bg-white'
+                key={sx}
+                type="button"
+                onClick={() =>
+                  setFilters((f) => ({ ...f, sex: f.sex === sx ? 'all' : sx }))
+                }
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                  filters.sex === sx
+                    ? 'bg-[#F4B6D6] text-[#17101C] font-semibold'
+                    : 'bg-white/[0.04] border border-white/[0.08] text-[#B8ABC2] hover:text-white'
                 }`}
               >
-                Port. (649)
+                {sx === 'F' ? 'Female' : 'Male'}
               </button>
-            </div>
-            <label className="w-full py-1.5 rounded-xl bg-white hover:bg-[#FAD6E8] text-[#1F1823] text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors border border-[#E5CEDB]">
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload Custom CSV</span>
+            ))}
+
+            {/* Study Time Select */}
+            <select
+              value={String(filters.studytime)}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  studytime: e.target.value === 'all' ? 'all' : Number(e.target.value),
+                }))
+              }
+              aria-label="Filter by Study Time"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.04] border border-white/[0.08] text-[#D7CADF] focus:outline-none focus:border-[#F4B6D6]/50"
+            >
+              <option value="all">Study: All</option>
+              <option value="1">Study: &lt;2h</option>
+              <option value="2">Study: 2–5h</option>
+              <option value="3">Study: 5–10h</option>
+              <option value="4">Study: &gt;10h</option>
+            </select>
+
+            {/* Age Bracket Select */}
+            <select
+              value={`${filters.minAge}-${filters.maxAge}`}
+              onChange={(e) => {
+                const [lo, hi] = e.target.value.split('-').map(Number);
+                setFilters((f) => ({ ...f, minAge: lo, maxAge: hi }));
+              }}
+              aria-label="Filter by Age"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/[0.04] border border-white/[0.08] text-[#D7CADF] focus:outline-none focus:border-[#F4B6D6]/50"
+            >
+              <option value="15-22">Age: 15–22</option>
+              <option value="15-16">Age: 15–16</option>
+              <option value="17-18">Age: 17–18</option>
+              <option value="19-22">Age: 19–22</option>
+            </select>
+
+            {/* Circular '+' Upload CSV Button matching reference '+' pill */}
+            <label
+              title="Upload Custom CSV Dataset"
+              className="w-8 h-8 rounded-full bg-[#3A2736]/85 hover:bg-[#F4B6D6] text-[#F4B6D6] hover:text-[#17101C] border border-white/10 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+            >
+              <Plus className="w-4 h-4" />
               <input
                 type="file"
                 accept=".csv"
@@ -401,346 +609,162 @@ export default function App() {
             </label>
           </div>
 
-          <button
-            onClick={handleOpenPythonModal}
-            className="w-full py-2.5 px-3 rounded-2xl bg-[#221B25]/95 hover:bg-[#221B25] text-[#FAD6E8] text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <Code2 className="w-4 h-4" />
-            <span>Python ML Codebase</span>
-          </button>
-        </div>
-      </aside>
+          {/* Right Quick Search & Utility Icon Buttons */}
+          <div className="flex items-center gap-2">
+            <div className="relative hidden md:block w-48">
+              <Search className="w-3.5 h-3.5 text-[#8F8099] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={globalSearch}
+                onChange={(e) => {
+                  setGlobalSearch(e.target.value);
+                  if (activePage !== 'explorer' && e.target.value.trim()) {
+                    setActivePage('explorer');
+                  }
+                }}
+                placeholder="Search students..."
+                className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs text-white placeholder-[#7F708A] focus:outline-none focus:border-[#F4B6D6]/50"
+              />
+            </div>
 
-      {/* Main Content Viewport */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Top Bar Contract: 3 Clean Zones */}
-        <header className="flex items-center justify-between gap-8 px-6 lg:px-8 py-4 bg-white/55 backdrop-blur-xl border-b border-white/80">
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-white/80 text-[#1F1823]"
-              aria-label="Open menu"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-            <span className="text-sm font-display font-bold tracking-tight text-[#1F1823] whitespace-nowrap shrink-0">
-              UCI Student Analytics
-            </span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-[#5E4B68]">
-            {(
-              [
-                ['overview', 'Overview'],
-                ['explorer', 'Dataset'],
-                ['eda', 'Visualizations'],
-                ['training', 'ML Models'],
-                ['prediction', 'Predict Grade'],
-              ] as [PageId, string][]
-            ).map(([pid, label]) => (
+            {hasActiveFilters && (
               <button
-                key={pid}
-                onClick={() => setActivePage(pid)}
-                className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
-                  activePage === pid
-                    ? 'text-[#1F1823] border-b-2 border-[#1F1823]'
-                    : 'hover:text-[#1F1823]'
-                }`}
+                type="button"
+                onClick={() => setFilters(DEFAULT_FILTERS)}
+                title="Reset Active Filters"
+                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/15 border border-white/10 flex items-center justify-center text-[#F4B6D6] transition-colors"
               >
-                {label}
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
-            ))}
-          </nav>
+            )}
 
-          <div className="shrink-0">
-            <a
-              href={`/api/dataset/download/${datasetKey === 'por' ? 'por' : 'mat'}`}
-              download={datasetKey === 'por' ? 'student-por.csv' : 'student-mat.csv'}
-              className="px-4 py-2 rounded-xl bg-[#221B25] hover:bg-[#322737] text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0 inline-block"
+            <button
+              type="button"
+              onClick={handleOpenPythonModal}
+              title="Inspect Modular Python ML Source Code"
+              className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-[#F4B6D6] text-[#D7CADF] hover:text-[#17101C] border border-white/10 flex items-center justify-center transition-colors"
             >
-              Download UCI CSV
+              <Code2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </section>
+
+        {/* Active Page Content */}
+        {loadingBundle || !dataset || !activeEvaluation ? (
+          <div className="glass-shell rounded-[26px] p-10 space-y-4 animate-pulse">
+            <div className="h-5 w-64 bg-white/10 rounded-lg" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="h-52 bg-white/[0.04] rounded-2xl" />
+              <div className="h-52 bg-white/[0.04] rounded-2xl" />
+              <div className="h-52 bg-white/[0.04] rounded-2xl" />
+            </div>
+          </div>
+        ) : (
+          <>
+            {activePage === 'overview' && (
+              <OverviewPage
+                dataset={dataset}
+                analytics={analytics}
+                evaluation={activeEvaluation}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                includeGrades={includeGrades}
+                onToggleIncludeGrades={setIncludeGrades}
+                prediction={prediction}
+                onSwitchDataset={handleSwitchDataset}
+                onNavigate={setActivePage}
+              />
+            )}
+
+            {activePage === 'explorer' && (
+              <ExplorerPage
+                dataset={dataset}
+                filteredRows={filteredRows}
+                globalSearch={globalSearch}
+                onChangeGlobalSearch={setGlobalSearch}
+                onSwitchDataset={handleSwitchDataset}
+                onUploadCsv={handleUploadCsv}
+              />
+            )}
+
+            {activePage === 'eda' && (
+              <EdaPage
+                dataset={dataset}
+                analytics={analytics}
+                evaluation={activeEvaluation}
+              />
+            )}
+
+            {activePage === 'training' && (
+              <TrainingPage
+                evaluation={activeEvaluation}
+                includeGrades={includeGrades}
+                onToggleIncludeGrades={setIncludeGrades}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                hyperparams={hyperparams}
+                onChangeHyperparams={setHyperparams}
+                onRetrain={handleRetrain}
+                isTraining={isTraining}
+              />
+            )}
+
+            {activePage === 'prediction' && (
+              <PredictionPage
+                studentInput={studentInput}
+                onChangeInput={setStudentInput}
+                includeGrades={includeGrades}
+                onToggleIncludeGrades={setIncludeGrades}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                onRunPredict={executePrediction}
+                prediction={prediction}
+                isPredicting={isPredicting}
+              />
+            )}
+
+            {activePage === 'insights' && (
+              <InsightsPage
+                evaluation={activeEvaluation}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+                includeGrades={includeGrades}
+                onToggleIncludeGrades={setIncludeGrades}
+              />
+            )}
+          </>
+        )}
+
+        {/* Quiet Editorial Footer */}
+        <footer className="pt-2 pb-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#8F8099]">
+          <p>
+            UCI Student Performance Dataset (Cortez, 2008) · Python Supervised ML Pipeline
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleOpenPythonModal}
+              className="hover:text-[#FAD8EA] transition-colors"
+            >
+              Python Source Files
+            </button>
+            <a
+              href="/api/dataset/download/mat"
+              download="student-mat.csv"
+              className="hover:text-[#FAD8EA] transition-colors"
+            >
+              student-mat.csv
+            </a>
+            <a
+              href="/api/dataset/download/por"
+              download="student-por.csv"
+              className="hover:text-[#FAD8EA] transition-colors"
+            >
+              student-por.csv
             </a>
           </div>
-        </header>
-
-        {/* Workspace Body */}
-        <main className="flex-1 px-5 lg:px-8 py-6 max-w-[1440px] w-full mx-auto space-y-6">
-          {errorBanner && (
-            <div className="rounded-2xl bg-rose-950/90 text-rose-100 border border-rose-400/30 px-4 py-3 text-xs flex items-center justify-between">
-              <span>{errorBanner}</span>
-              <button onClick={() => setErrorBanner(null)} className="p-1 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Hero Two-Tone Title + 3 Frosted Blush KPI Cards (Exact Visual Motif from Reference UI) */}
-          <section className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-end">
-            <div className="xl:col-span-5 space-y-4">
-              <h1
-                className="font-display font-bold tracking-tight leading-[1.06]"
-                style={{ fontSize: 'clamp(2.15rem, 3.4vw, 3.25rem)', textWrap: 'balance' }}
-              >
-                <span className="block text-[#1F1823]">{pageMeta.heroTop}</span>
-                <span className="block text-[#DF82B0]">{pageMeta.heroAccent}</span>
-              </h1>
-
-              {/* Dynamic Cohort Filter Strip (Updates Overview, Explorer & All 10 EDA Charts) */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {(['all', 'GP', 'MS'] as const).map((sch) => (
-                  <button
-                    key={sch}
-                    onClick={() => setFilters((f) => ({ ...f, school: sch }))}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
-                      filters.school === sch
-                        ? 'bg-[#FAD5E8] text-[#1F1823] shadow-sm border border-[#ECAAD0]'
-                        : 'bg-white/75 text-[#55425E] hover:bg-white border border-white/90'
-                    }`}
-                  >
-                    {sch === 'all' ? 'All Schools' : `School ${sch}`}
-                  </button>
-                ))}
-
-                {(['all', 'F', 'M'] as const).map((sx) => (
-                  <button
-                    key={sx}
-                    onClick={() => setFilters((f) => ({ ...f, sex: sx }))}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
-                      filters.sex === sx
-                        ? 'bg-[#FAD5E8] text-[#1F1823] shadow-sm border border-[#ECAAD0]'
-                        : 'bg-white/75 text-[#55425E] hover:bg-white border border-white/90'
-                    }`}
-                  >
-                    {sx === 'all' ? 'All Genders' : sx === 'F' ? 'Female' : 'Male'}
-                  </button>
-                ))}
-
-                <select
-                  value={String(filters.studytime)}
-                  onChange={(e) =>
-                    setFilters((f) => ({
-                      ...f,
-                      studytime: e.target.value === 'all' ? 'all' : Number(e.target.value),
-                    }))
-                  }
-                  aria-label="Filter by Study Time"
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white/80 border border-white/90 text-[#3B2E41] focus:outline-none"
-                >
-                  <option value="all">Study: All</option>
-                  <option value="1">Study: &lt;2h</option>
-                  <option value="2">Study: 2–5h</option>
-                  <option value="3">Study: 5–10h</option>
-                  <option value="4">Study: &gt;10h</option>
-                </select>
-
-                <select
-                  value={`${filters.minAge}-${filters.maxAge}`}
-                  onChange={(e) => {
-                    const [lo, hi] = e.target.value.split('-').map(Number);
-                    setFilters((f) => ({ ...f, minAge: lo, maxAge: hi }));
-                  }}
-                  aria-label="Filter by Age Bracket"
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white/80 border border-white/90 text-[#3B2E41] focus:outline-none"
-                >
-                  <option value="15-22">Age: 15–22</option>
-                  <option value="15-16">Age: 15–16</option>
-                  <option value="17-18">Age: 17–18</option>
-                  <option value="19-22">Age: 19–22</option>
-                </select>
-
-                {hasActiveFilters && (
-                  <button
-                    onClick={() => setFilters(DEFAULT_FILTERS)}
-                    title="Reset Filters"
-                    className="p-1.5 rounded-full bg-[#221B25] text-white hover:bg-[#3A2E40] transition-colors"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 3 Frosted White-Blush Glass KPI Cards with Sparklines */}
-            <div className="xl:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* KPI 1 */}
-              <div className="rounded-[22px] bg-white/75 backdrop-blur-xl border border-white/95 p-5 shadow-[0_12px_32px_rgba(35,29,37,0.05)] flex flex-col justify-between">
-                <div className="text-xs font-medium text-[#5E4B68]">Average Final Grade</div>
-                <div className="my-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-display font-bold tabular-nums text-[#1F1823]">
-                    {analytics.avgG3.toFixed(2)}
-                  </span>
-                  <sup className="text-xs font-mono font-semibold text-[#6E5D76]">/20</sup>
-                </div>
-                <div className="flex items-end justify-between gap-2">
-                  <span className="text-xs font-semibold text-[#D66A9E] tabular-nums">
-                    ↑ Max {analytics.highestG3}/20
-                  </span>
-                  <RoseSparkline
-                    id="kpi_avg"
-                    values={
-                      analytics.studyVsGrade.length >= 2
-                        ? analytics.studyVsGrade.map((s) => s.avgG3)
-                        : [9.5, 10.1, 11.4, 11.9]
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* KPI 2 */}
-              <div className="rounded-[22px] bg-white/75 backdrop-blur-xl border border-white/95 p-5 shadow-[0_12px_32px_rgba(35,29,37,0.05)] flex flex-col justify-between">
-                <div className="text-xs font-medium text-[#5E4B68]">Pass Percentage</div>
-                <div className="my-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-display font-bold tabular-nums text-[#1F1823]">
-                    {analytics.passRate.toFixed(1)}
-                  </span>
-                  <sup className="text-xs font-mono font-semibold text-[#6E5D76]">%</sup>
-                </div>
-                <div className="flex items-end justify-between gap-2">
-                  <span className="text-xs font-semibold text-[#D66A9E] tabular-nums">
-                    n = {analytics.totalStudents}
-                  </span>
-                  <RoseSparkline
-                    id="kpi_pass"
-                    values={
-                      analytics.agePerformance.length >= 2
-                        ? analytics.agePerformance.map((a) => a.passRate)
-                        : [62, 68, 71, 67]
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* KPI 3 */}
-              <div className="rounded-[22px] bg-white/75 backdrop-blur-xl border border-white/95 p-5 shadow-[0_12px_32px_rgba(35,29,37,0.05)] flex flex-col justify-between">
-                <div className="text-xs font-medium text-[#5E4B68]">Best Test R² Score</div>
-                <div className="my-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-display font-bold tabular-nums text-[#1F1823]">
-                    {activeEvaluation
-                      ? activeEvaluation.models[activeEvaluation.bestModelKey].testMetrics.r2.toFixed(3)
-                      : '...'}
-                  </span>
-                  <sup className="text-xs font-mono font-semibold text-[#6E5D76]">R²</sup>
-                </div>
-                <div className="flex items-end justify-between gap-2">
-                  <span className="text-xs font-semibold text-[#D66A9E] truncate max-w-[95px]">
-                    {includeGrades ? 'With G1/G2' : 'Habits Only'}
-                  </span>
-                  <RoseSparkline id="kpi_r2" values={[0.68, 0.74, 0.77, 0.85]} />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Page Content Area */}
-          {loadingBundle || !dataset || !activeEvaluation ? (
-            <div className="rounded-[26px] bg-[#221B25] p-10 text-white space-y-4 animate-pulse">
-              <div className="h-5 w-64 bg-white/10 rounded-lg" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="h-52 bg-white/5 rounded-2xl" />
-                <div className="h-52 bg-white/5 rounded-2xl" />
-                <div className="h-52 bg-white/5 rounded-2xl" />
-              </div>
-            </div>
-          ) : (
-            <>
-              {activePage === 'overview' && (
-                <OverviewPage
-                  dataset={dataset}
-                  analytics={analytics}
-                  evaluation={activeEvaluation}
-                  includeGrades={includeGrades}
-                  onToggleIncludeGrades={setIncludeGrades}
-                  onNavigate={setActivePage}
-                />
-              )}
-
-              {activePage === 'explorer' && (
-                <ExplorerPage
-                  dataset={dataset}
-                  filteredRows={filteredRows}
-                  onSwitchDataset={handleSwitchDataset}
-                  onUploadCsv={handleUploadCsv}
-                />
-              )}
-
-              {activePage === 'eda' && (
-                <EdaPage
-                  dataset={dataset}
-                  analytics={analytics}
-                  evaluation={activeEvaluation}
-                />
-              )}
-
-              {activePage === 'training' && (
-                <TrainingPage
-                  evaluation={activeEvaluation}
-                  includeGrades={includeGrades}
-                  onToggleIncludeGrades={setIncludeGrades}
-                  selectedModel={selectedModel}
-                  onSelectModel={setSelectedModel}
-                  hyperparams={hyperparams}
-                  onChangeHyperparams={setHyperparams}
-                  onRetrain={handleRetrain}
-                  isTraining={isTraining}
-                />
-              )}
-
-              {activePage === 'prediction' && (
-                <PredictionPage
-                  studentInput={studentInput}
-                  onChangeInput={setStudentInput}
-                  includeGrades={includeGrades}
-                  onToggleIncludeGrades={setIncludeGrades}
-                  selectedModel={selectedModel}
-                  onSelectModel={setSelectedModel}
-                  onRunPredict={executePrediction}
-                  prediction={prediction}
-                  isPredicting={isPredicting}
-                />
-              )}
-
-              {activePage === 'insights' && (
-                <InsightsPage
-                  evaluation={activeEvaluation}
-                  selectedModel={selectedModel}
-                  onSelectModel={setSelectedModel}
-                  includeGrades={includeGrades}
-                  onToggleIncludeGrades={setIncludeGrades}
-                />
-              )}
-            </>
-          )}
-
-          {/* Subtle Editorial Footer Quote (Matches reference bottom-left quiet note) */}
-          <footer className="pt-2 pb-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#6E5D76]">
-            <p className="italic">
-              “Data-grounded academic insight — built on the UCI Student Performance Repository (Cortez, 2008).”
-            </p>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleOpenPythonModal}
-                className="hover:text-[#1F1823] underline underline-offset-4"
-              >
-                Inspect Modular Python ML Source
-              </button>
-              <a
-                href="/api/dataset/download/mat"
-                download="student-mat.csv"
-                className="hover:text-[#1F1823] underline underline-offset-4"
-              >
-                student-mat.csv
-              </a>
-              <a
-                href="/api/dataset/download/por"
-                download="student-por.csv"
-                className="hover:text-[#1F1823] underline underline-offset-4"
-              >
-                student-por.csv
-              </a>
-            </div>
-          </footer>
-        </main>
-      </div>
+        </footer>
+      </main>
 
       <PythonSourceModal
         open={pythonModalOpen}
