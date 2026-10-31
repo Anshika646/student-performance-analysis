@@ -380,59 +380,59 @@ export default function App() {
       <div className="mt-6 glass-subcard rounded-[20px] p-4 flex items-center gap-3.5">
         <span
           aria-hidden="true"
-          className="w-1 h-11 rounded-full bg-gradient-to-b from-[#FAD9EA] via-[#F8C6DF] to-[#A4C288] shadow-[0_0_12px_rgba(248,198,223,0.80)] shrink-0"
+          className="w-1 h-11 rounded-full bg-gradient-to-b from-[#FAD3E7] via-[#F5A6CC] to-[#A4C288] shadow-[0_0_14px_rgba(245,166,204,0.85)] shrink-0"
         />
-        <p className="text-[11.5px] leading-relaxed text-[#CAD2C4] font-medium">
-          <span className="block text-[#FCF9FB]">Better data.</span>
+        <p className="text-[11.5px] leading-relaxed text-[#CED5C9] font-medium">
+          <span className="block text-[#FDF8FB]">Better data.</span>
           <span className="block">Better decisions.</span>
-          <span className="block text-[#FAD9EA]">Brighter futures.</span>
+          <span className="block text-[#F8C6DF]">Brighter futures.</span>
         </p>
       </div>
     </div>
   );
 
   return (
-    <div className="relative min-h-screen text-[#FCF9FB] selection:bg-[#F8C6DF]/30">
+    <div className="relative min-h-screen text-[#FDF8FB] selection:bg-[#F5A6CC]/35">
       {/* =====================================================================
-          CINEMATIC OLIVE-GREEN + SOFT LIGHT-PINK AMBIENT GLASS BACKDROP
+          CINEMATIC OLIVE-GREEN + BLUSH BABY-PINK AMBIENT GLASS BACKDROP
           Visible behind all blur(24px) smoked olive-glass panels
           ===================================================================== */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
-        {/* Top-center luminous soft light-pink beam */}
-        <div className="absolute -top-24 left-[34%] w-[480px] h-[480px] rounded-full bg-gradient-to-br from-[#FAD9EA]/26 via-[#F8C6DF]/14 to-transparent blur-[105px]" />
-        {/* Bottom-left rose-petal light behind olive sidebar */}
-        <div className="absolute bottom-[-85px] -left-16 w-[410px] h-[410px] rounded-full bg-gradient-to-tr from-[#F8C6DF]/24 via-[#A4C288]/14 to-transparent blur-[95px]" />
-        {/* Right-rail olive-sage & soft pink glass refraction */}
-        <div className="absolute top-[20%] -right-20 w-[430px] h-[430px] rounded-full bg-gradient-to-bl from-[#FAD9EA]/22 via-[#8CAA70]/16 to-transparent blur-[105px]" />
-        {/* Center-bottom warm moss glow */}
-        <div className="absolute bottom-[10%] left-[44%] w-[440px] h-[340px] rounded-full bg-gradient-to-t from-[#6E8B54]/18 via-[#F8C6DF]/08 to-transparent blur-[110px]" />
-        {/* Subtle abstract translucent pink & sage glass curves */}
+        {/* Top-center lush baby-pink & rose bokeh orb */}
+        <div className="absolute -top-24 left-[32%] w-[520px] h-[500px] rounded-full bg-gradient-to-br from-[#F5A6CC]/38 via-[#FAD3E7]/20 to-transparent blur-[105px]" />
+        {/* Bottom-left blush-rose & botanical sage bloom behind sidebar */}
+        <div className="absolute bottom-[-80px] -left-16 w-[430px] h-[430px] rounded-full bg-gradient-to-tr from-[#E88DBB]/34 via-[#F5A6CC]/18 to-transparent blur-[95px]" />
+        {/* Right-rail rose-pink & olive-moss glass refraction */}
+        <div className="absolute top-[18%] -right-20 w-[450px] h-[450px] rounded-full bg-gradient-to-bl from-[#F5A6CC]/32 via-[#8CAA70]/18 to-transparent blur-[105px]" />
+        {/* Center-bottom botanical olive & soft pink glow */}
+        <div className="absolute bottom-[8%] left-[44%] w-[460px] h-[360px] rounded-full bg-gradient-to-t from-[#6E8B54]/22 via-[#F5A6CC]/14 to-transparent blur-[110px]" />
+        {/* Subtle abstract translucent blush-pink & sage glass curves */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-35"
+          className="absolute inset-0 w-full h-full opacity-45"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="bg_curve_pink" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#FAD9EA" stopOpacity="0.34" />
-              <stop offset="50%" stopColor="#B8D29B" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#F8C6DF" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.45" />
+              <stop offset="50%" stopColor="#B8D29B" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#FAD3E7" stopOpacity="0.06" />
             </linearGradient>
           </defs>
           <path
             d="M -80 680 C 180 540, 340 820, 620 710 C 900 600, 1140 260, 1520 340"
             fill="none"
             stroke="url(#bg_curve_pink)"
-            strokeWidth="1.5"
+            strokeWidth="1.6"
           />
           <path
             d="M 780 -40 C 920 180, 1220 120, 1480 420"
             fill="none"
             stroke="url(#bg_curve_pink)"
-            strokeWidth="1.2"
+            strokeWidth="1.3"
           />
         </svg>
       </div>

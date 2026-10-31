@@ -99,14 +99,14 @@ export const EdaPage: React.FC<EdaProps> = ({
                 </p>
               </div>
             </div>
-            <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#FAD9EA]/20">
+            <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#F5A6CC]/28">
               <button
                 type="button"
                 onClick={() => setEdaPieStyle('pie')}
                 className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                   edaPieStyle === 'pie'
-                    ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                    : 'text-[#97A390] hover:text-[#FCF9FB]'
+                    ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                    : 'text-[#9CA696] hover:text-[#FDF8FB]'
                 }`}
               >
                 Pie
@@ -116,8 +116,8 @@ export const EdaPage: React.FC<EdaProps> = ({
                 onClick={() => setEdaPieStyle('donut')}
                 className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                   edaPieStyle === 'donut'
-                    ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                    : 'text-[#97A390] hover:text-[#FCF9FB]'
+                    ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                    : 'text-[#9CA696] hover:text-[#FDF8FB]'
                 }`}
               >
                 Donut

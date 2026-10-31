@@ -27,64 +27,64 @@ const GlassSvgDefs: React.FC<{ prefix: string }> = ({ prefix }) => (
       </feMerge>
     </filter>
 
-    {/* 1. Primary Smoked Olive-Moss Glass Body (Warm pink-kissed top sheen) */}
+    {/* 1. Primary Frosted Rose-Pink -> Smoked Olive Glass Body */}
     <linearGradient id={`${prefix}_body_pink`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#586C4A" stopOpacity="0.94" />
-      <stop offset="38%" stopColor="#2F3F25" stopOpacity="0.95" />
-      <stop offset="100%" stopColor="#141D10" stopOpacity="0.98" />
+      <stop offset="0%" stopColor="#F5A6CC" stopOpacity="0.88" />
+      <stop offset="44%" stopColor="#9B5979" stopOpacity="0.86" />
+      <stop offset="100%" stopColor="#1D2618" stopOpacity="0.96" />
     </linearGradient>
 
-    {/* 2. Hovered / Peak Light-Pink-Lit Olive Glass Body */}
+    {/* 2. Hovered / Peak Luminous Baby-Pink -> Blush Glass Body */}
     <linearGradient id={`${prefix}_body_blush`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#7A6B69" stopOpacity="0.96" />
-      <stop offset="35%" stopColor="#3B4D2F" stopOpacity="0.96" />
-      <stop offset="100%" stopColor="#182213" stopOpacity="0.98" />
+      <stop offset="0%" stopColor="#FAD3E7" stopOpacity="0.94" />
+      <stop offset="42%" stopColor="#C9739D" stopOpacity="0.88" />
+      <stop offset="100%" stopColor="#263220" stopOpacity="0.96" />
     </linearGradient>
 
     {/* 3. Botanical Sage-Olive Smoked Glass Body */}
     <linearGradient id={`${prefix}_body_lavender`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#465D37" stopOpacity="0.94" />
-      <stop offset="42%" stopColor="#26341E" stopOpacity="0.95" />
-      <stop offset="100%" stopColor="#11190E" stopOpacity="0.98" />
+      <stop offset="0%" stopColor="#6D8956" stopOpacity="0.94" />
+      <stop offset="45%" stopColor="#2E3E24" stopOpacity="0.95" />
+      <stop offset="100%" stopColor="#121B0F" stopOpacity="0.98" />
     </linearGradient>
 
-    {/* 4. Deep Cypress-Olive Smoked Glass Body */}
+    {/* 4. Rose-Kissed Cypress-Olive Glass Body */}
     <linearGradient id={`${prefix}_body_periwinkle`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#3C5032" stopOpacity="0.94" />
-      <stop offset="45%" stopColor="#212D1B" stopOpacity="0.95" />
-      <stop offset="100%" stopColor="#10170D" stopOpacity="0.98" />
+      <stop offset="0%" stopColor="#A6768A" stopOpacity="0.90" />
+      <stop offset="48%" stopColor="#35472B" stopOpacity="0.94" />
+      <stop offset="100%" stopColor="#131B10" stopOpacity="0.98" />
     </linearGradient>
 
-    {/* Diagonal Light-Pink Specular Glass Sheen */}
+    {/* Diagonal Baby-Pink Specular Glass Sheen */}
     <linearGradient id={`${prefix}_sheen`} x1="0" y1="0" x2="1" y2="0.88">
-      <stop offset="0%" stopColor="#FAD9EA" stopOpacity="0.22" />
-      <stop offset="32%" stopColor="#FFFFFF" stopOpacity="0.05" />
+      <stop offset="0%" stopColor="#FFE6F3" stopOpacity="0.28" />
+      <stop offset="34%" stopColor="#FFFFFF" stopOpacity="0.06" />
       <stop offset="68%" stopColor="#FFFFFF" stopOpacity="0.0" />
     </linearGradient>
 
-    {/* Precision Light-Pink & Sage Specular Rim Gradients */}
+    {/* Precision Rose-Pink & Botanical Sage Specular Rim Gradients */}
     <linearGradient id={`${prefix}_rim_pink`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FAD9EA" stopOpacity="0.82" />
-      <stop offset="45%" stopColor="#F8C6DF" stopOpacity="0.34" />
-      <stop offset="100%" stopColor="#A4C288" stopOpacity="0.14" />
+      <stop offset="0%" stopColor="#FFE6F3" stopOpacity="0.95" />
+      <stop offset="48%" stopColor="#F5A6CC" stopOpacity="0.52" />
+      <stop offset="100%" stopColor="#A4C288" stopOpacity="0.18" />
     </linearGradient>
 
     <linearGradient id={`${prefix}_rim_lavender`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#D6E8BE" stopOpacity="0.72" />
-      <stop offset="45%" stopColor="#A4C288" stopOpacity="0.28" />
-      <stop offset="100%" stopColor="#FAD9EA" stopOpacity="0.10" />
+      <stop offset="0%" stopColor="#DCF0C5" stopOpacity="0.80" />
+      <stop offset="48%" stopColor="#A4C288" stopOpacity="0.34" />
+      <stop offset="100%" stopColor="#F5A6CC" stopOpacity="0.14" />
     </linearGradient>
 
     <linearGradient id={`${prefix}_rim_periwinkle`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="#FCE2EF" stopOpacity="0.65" />
-      <stop offset="45%" stopColor="#9AB87E" stopOpacity="0.24" />
-      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.08" />
+      <stop offset="0%" stopColor="#FAD3E7" stopOpacity="0.84" />
+      <stop offset="48%" stopColor="#9AB87E" stopOpacity="0.32" />
+      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.10" />
     </linearGradient>
   </defs>
 );
 
 /**
- * Reusable Smoked Olive-Green + Light-Pink Glass Column Primitive
+ * Reusable Smoked Olive-Green + Rose-Pink Glass Column Primitive
  */
 const GlassColumn: React.FC<{
   prefix: string;
@@ -120,10 +120,10 @@ const GlassColumn: React.FC<{
       : `${prefix}_rim_pink`;
   const topCapColor =
     tone === 'lavender'
-      ? 'rgba(214, 232, 190, 0.88)'
+      ? 'rgba(220, 240, 197, 0.90)'
       : tone === 'periwinkle'
-      ? 'rgba(250, 217, 234, 0.85)'
-      : 'rgba(252, 226, 239, 0.94)';
+      ? 'rgba(250, 211, 231, 0.90)'
+      : 'rgba(255, 234, 245, 0.98)';
 
   return (
     <g opacity={dimmed ? 0.42 : 1} style={{ transition: 'opacity 160ms ease' }}>
@@ -302,24 +302,24 @@ export const RoseSparkline: React.FC<{
   };
 
   return (
-    <div className="w-full min-w-[88px] max-w-[136px] h-11 flex-1 rounded-xl bg-[#10180D]/88 border border-pink-primary/25 px-1.5 py-1 shadow-[inset_0_1px_8px_rgba(6,10,5,0.65)]">
+    <div className="w-full min-w-[88px] max-w-[136px] h-11 flex-1 rounded-xl bg-[#11190E]/90 border border-pink-primary/35 px-1.5 py-1 shadow-[inset_0_1px_8px_rgba(6,10,5,0.65),0_0_14px_rgba(245,166,204,0.08)]">
       <ResponsiveContainer width="100%" height="100%" minWidth={80}>
         {variant === 'bar' ? (
           <BarChart data={chartData} margin={{ top: 3, right: 3, bottom: 1, left: 3 }} barCategoryGap="22%">
             <defs>
               <linearGradient id={`${gradId}_bar`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#465D37" stopOpacity={0.96} />
-                <stop offset="100%" stopColor="#162012" stopOpacity={0.95} />
+                <stop offset="0%" stopColor="#698553" stopOpacity={0.96} />
+                <stop offset="100%" stopColor="#1A2615" stopOpacity={0.95} />
               </linearGradient>
               <linearGradient id={`${gradId}_bar_peak`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FAD9EA" stopOpacity={0.90} />
-                <stop offset="100%" stopColor="#2E3F24" stopOpacity={0.95} />
+                <stop offset="0%" stopColor="#FAD3E7" stopOpacity={0.95} />
+                <stop offset="100%" stopColor="#9B5979" stopOpacity={0.92} />
               </linearGradient>
             </defs>
             <YAxis hide domain={[domainMin, domainMax]} />
             <RechartsTooltip
               content={renderTooltip}
-              cursor={{ fill: 'rgba(248, 198, 223, 0.10)' }}
+              cursor={{ fill: 'rgba(245, 166, 204, 0.14)' }}
               position={{ y: -32 }}
               allowEscapeViewBox={{ x: true, y: true }}
             />
@@ -329,8 +329,8 @@ export const RoseSparkline: React.FC<{
                   key={`${entry.label}_${idx}`}
                   fill={idx === peakIdx ? `url(#${gradId}_bar_peak)` : `url(#${gradId}_bar)`}
                   stroke={idx === peakIdx ? '#FFFFFF' : pinkPrimary}
-                  strokeOpacity={idx === peakIdx ? 0.90 : 0.55}
-                  strokeWidth={0.9}
+                  strokeOpacity={idx === peakIdx ? 0.92 : 0.62}
+                  strokeWidth={0.95}
                 />
               ))}
             </Bar>
@@ -339,9 +339,9 @@ export const RoseSparkline: React.FC<{
           <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 2, left: 3 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FAD9EA" stopOpacity={0.44} />
-                <stop offset="62%" stopColor="#A4C288" stopOpacity={0.14} />
-                <stop offset="100%" stopColor="#10180D" stopOpacity={0.0} />
+                <stop offset="0%" stopColor="#F5A6CC" stopOpacity={0.55} />
+                <stop offset="56%" stopColor="#E88DBB" stopOpacity={0.22} />
+                <stop offset="100%" stopColor="#11190E" stopOpacity={0.0} />
               </linearGradient>
               <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="1.6" result="blur" />
@@ -579,42 +579,42 @@ export const PerformanceDonutChart: React.FC<{
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
           <defs>
-            {/* Slice 1: Smoked Olive-Moss Glass with Soft Light-Pink Sheen */}
+            {/* Slice 1: Lush Frosted Rose-Pink -> Plum-Olive Glass */}
             <linearGradient id={`pie_onyx_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#5D744A" />
-              <stop offset="50%" stopColor="#324327" />
-              <stop offset="100%" stopColor="#161F12" />
+              <stop offset="0%" stopColor="#F6A8CE" />
+              <stop offset="52%" stopColor="#A95C83" />
+              <stop offset="100%" stopColor="#272124" />
             </linearGradient>
 
-            {/* Slice 2: Deep Botanical Olive Glass */}
+            {/* Slice 2: Deep Smoked Olive-Moss Glass with Blush Undertone */}
             <linearGradient id={`pie_carbon_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#334428" />
-              <stop offset="55%" stopColor="#1E2918" />
-              <stop offset="100%" stopColor="#0F150C" />
+              <stop offset="0%" stopColor="#485E38" />
+              <stop offset="55%" stopColor="#23301C" />
+              <stop offset="100%" stopColor="#10170E" />
             </linearGradient>
 
-            {/* Slice 3: Frosted Sage-Olive Glass */}
+            {/* Slice 3: Botanical Sage-Olive Glass */}
             <linearGradient id={`pie_graphite_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#4A633A" />
-              <stop offset="55%" stopColor="#283720" />
-              <stop offset="100%" stopColor="#131B0F" />
+              <stop offset="0%" stopColor="#728F5A" />
+              <stop offset="55%" stopColor="#314226" />
+              <stop offset="100%" stopColor="#141C10" />
             </linearGradient>
 
-            {/* Diagonal Light-Pink Specular Sheen Overlay */}
+            {/* Diagonal Baby-Pink Specular Sheen Overlay */}
             <linearGradient id={`pie_sheen_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#FAD9EA" stopOpacity="0.22" />
-              <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.04" />
+              <stop offset="0%" stopColor="#FFE6F3" stopOpacity="0.28" />
+              <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.05" />
               <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
-          {/* Outer Olive-Glass Bezel Plate */}
+          {/* Outer Olive-Pink Bezel Plate */}
           <circle
             cx={cx}
             cy={cy}
             r={outerR + 6}
             fill="#0F160C"
-            stroke="rgba(250, 217, 234, 0.16)"
+            stroke="rgba(245, 166, 204, 0.24)"
             strokeWidth={1}
           />
 
@@ -644,10 +644,10 @@ export const PerformanceDonutChart: React.FC<{
 
                 const strokeCol =
                   seg.tone === 'pink'
-                    ? '#FAD9EA'
+                    ? '#FFE3F1'
                     : seg.tone === 'lavender'
                     ? '#C5DBA9'
-                    : 'rgba(250,217,234,0.34)';
+                    : 'rgba(245,166,204,0.46)';
 
                 const labelR = outerR * 0.62;
                 const lx = cx + labelR * Math.cos(midRad);
@@ -788,15 +788,15 @@ export const PerformanceDonutChart: React.FC<{
         )}
       </div>
 
-      {/* Right Olive-Glass Legend */}
+      {/* Right Olive-Pink Legend */}
       <div className="flex-1 w-full space-y-2.5">
         {segments.map((seg, idx) => {
           const swatchStyle =
             seg.tone === 'pink'
-              ? 'bg-[#394C2E] border-[#FAD9EA]'
+              ? 'bg-[#D87EA9] border-[#FFE6F3]'
               : seg.tone === 'lavender'
-              ? 'bg-[#2C3C23] border-[#C5DBA9]'
-              : 'bg-[#1C2716] border-[#F8C6DF]/45';
+              ? 'bg-[#5B7546] border-[#DCF0C5]'
+              : 'bg-[#2C3C23] border-[#F5A6CC]/60';
 
           return (
             <div
@@ -805,8 +805,8 @@ export const PerformanceDonutChart: React.FC<{
               onMouseLeave={() => setHovered(null)}
               className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl border transition-all cursor-default ${
                 hovered === idx
-                  ? 'bg-[#273620] border-[#FAD9EA]/55'
-                  : 'bg-[#141D11] border-[#FAD9EA]/14'
+                  ? 'bg-[#2B3A23] border-[#F5A6CC]/60'
+                  : 'bg-[#141D11] border-[#F5A6CC]/18'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
@@ -1135,7 +1135,7 @@ export const StudyGradeScatterChart: React.FC<{
           Final Grade (G3)
         </text>
 
-        {/* Olive-Moss Points with Soft Light-Pink & Sage Specular Rim */}
+        {/* Rose-Pink & Botanical Olive-Sage Glass Scatter Points */}
         {points.map((pt) => {
           const isHov = hoveredIdx === pt.idx;
           const isFemale = pt.sex === 'F';
@@ -1144,9 +1144,9 @@ export const StudyGradeScatterChart: React.FC<{
               key={pt.idx}
               cx={toX(pt.x)}
               cy={toY(pt.y)}
-              r={isHov ? 5.2 : 3.1}
-              fill={isFemale ? '#35472A' : '#22301B'}
-              stroke={isHov ? '#FFFFFF' : isFemale ? '#FAD9EA' : 'rgba(197, 219, 169, 0.78)'}
+              r={isHov ? 5.2 : 3.2}
+              fill={isFemale ? '#B8638E' : '#3C5230'}
+              stroke={isHov ? '#FFFFFF' : isFemale ? '#FFE3F1' : '#C5DBA9'}
               strokeWidth={isHov ? 1.6 : 1.05}
               onMouseEnter={() => setHoveredIdx(pt.idx)}
               onMouseLeave={() => setHoveredIdx(null)}
@@ -1155,15 +1155,15 @@ export const StudyGradeScatterChart: React.FC<{
           );
         })}
 
-        {/* Sleek Light-Pink Trend Line */}
+        {/* Luminous Blush-Pink Trend Line */}
         {showTrend && points.length >= 2 && (
           <line
             x1={toX(xStart)}
             y1={toY(yStart)}
             x2={toX(xEnd)}
             y2={toY(yEnd)}
-            stroke="#FAD9EA"
-            strokeWidth={1.9}
+            stroke="#F5A6CC"
+            strokeWidth={2.1}
             strokeLinecap="round"
           />
         )}
@@ -1595,11 +1595,11 @@ export const PeriodProgressionChart: React.FC<{
     <div className="chart-obsidian-well rounded-2xl p-3">
       <div className="flex items-center justify-end gap-5 mb-2 text-[11px] text-[#CAD2C4]">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#35482B] border border-[#FAD9EA] inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#C66E9A] border border-[#FFE3F1] inline-block" />
           Passing Cohort (G3 ≥ 10)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#1E2B18] border border-[#C5DBA9]/75 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#3A4F2E] border border-[#C5DBA9] inline-block" />
           Overall Mean
         </span>
       </div>
@@ -1712,8 +1712,9 @@ export const AgeTrajectoryChart: React.FC<{
       <svg className="w-full h-[200px] overflow-visible" viewBox={`0 0 ${w} ${h}`}>
         <defs>
           <linearGradient id={`ageArea_${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#485E38" stopOpacity="0.72" />
-            <stop offset="100%" stopColor="#11190E" stopOpacity="0.06" />
+            <stop offset="0%" stopColor="#E88DBB" stopOpacity="0.48" />
+            <stop offset="55%" stopColor="#485E38" stopOpacity="0.34" />
+            <stop offset="100%" stopColor="#11190E" stopOpacity="0.04" />
           </linearGradient>
         </defs>
         {[6, 10, 14].map((g) => {
@@ -1740,7 +1741,7 @@ export const AgeTrajectoryChart: React.FC<{
           );
         })}
         <path d={areaPath} fill={`url(#ageArea_${uid})`} />
-        <path d={linePath} fill="none" stroke="#FAD9EA" strokeWidth="2" strokeLinecap="round" />
+        <path d={linePath} fill="none" stroke="#F5A6CC" strokeWidth="2.1" strokeLinecap="round" />
         {pts.map((p, idx) => (
           <g
             key={p.age}
@@ -1752,8 +1753,8 @@ export const AgeTrajectoryChart: React.FC<{
               cx={p.x}
               cy={p.y}
               r={hovered === idx ? 5.6 : 4.2}
-              fill="#151F11"
-              stroke="#FAD9EA"
+              fill="#A85980"
+              stroke="#FFE6F3"
               strokeWidth={1.8}
             />
             <text
@@ -1812,11 +1813,11 @@ export const GroupedBarsChart: React.FC<{
     <div className="chart-obsidian-well rounded-2xl p-3">
       <div className="flex items-center justify-end gap-5 mb-1 text-[11px] text-[#CAD2C4]">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#35482B] border border-[#FAD9EA] inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#C66E9A] border border-[#FFE3F1] inline-block" />
           {seriesA.name}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#1E2B18] border border-[#C5DBA9]/75 inline-block" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#3A4F2E] border border-[#C5DBA9] inline-block" />
           {seriesB.name}
         </span>
       </div>
@@ -1901,20 +1902,24 @@ export const CorrelationHeatmap: React.FC<{
 
   const cellStyle = (val: number): React.CSSProperties => {
     const mag = Math.abs(val);
+    if (val >= 0.45) {
+      return {
+        background: `linear-gradient(155deg, rgba(${Math.round(135 + mag * 82)}, ${Math.round(68 + mag * 56)}, ${Math.round(102 + mag * 72)}, 0.78) 0%, rgba(30, 35, 24, 0.94) 100%)`,
+        borderColor: `rgba(250, 211, 231, ${(0.32 + mag * 0.38).toFixed(2)})`,
+        boxShadow: 'inset 0 1px 0 rgba(255,238,247,0.22)',
+      };
+    }
     if (val >= 0) {
       return {
-        background: `linear-gradient(155deg, rgba(${Math.round(32 + mag * 64)}, ${Math.round(45 + mag * 52)}, ${Math.round(27 + mag * 38)}, 0.94) 0%, rgba(18, 25, 15, 0.96) 100%)`,
-        borderColor:
-          val >= 0.65
-            ? 'rgba(250, 217, 234, 0.60)'
-            : `rgba(250, 217, 234, ${(0.10 + mag * 0.22).toFixed(2)})`,
+        background: `linear-gradient(155deg, rgba(${Math.round(36 + mag * 62)}, ${Math.round(49 + mag * 50)}, ${Math.round(30 + mag * 36)}, 0.92) 0%, rgba(18, 25, 15, 0.96) 100%)`,
+        borderColor: `rgba(245, 166, 204, ${(0.14 + mag * 0.28).toFixed(2)})`,
         boxShadow: 'inset 0 1px 0 rgba(255,240,248,0.12)',
       };
     }
     return {
-      background: `linear-gradient(155deg, rgba(${Math.round(24 + mag * 26)}, ${Math.round(35 + mag * 36)}, ${Math.round(21 + mag * 22)}, 0.94) 0%, rgba(15, 22, 13, 0.96) 100%)`,
-      borderColor: `rgba(197, 219, 169, ${(0.14 + mag * 0.34).toFixed(2)})`,
-      boxShadow: 'inset 0 1px 0 rgba(235,246,224,0.08)',
+      background: `linear-gradient(155deg, rgba(${Math.round(28 + mag * 34)}, ${Math.round(42 + mag * 44)}, ${Math.round(24 + mag * 26)}, 0.94) 0%, rgba(15, 22, 13, 0.96) 100%)`,
+      borderColor: `rgba(197, 219, 169, ${(0.18 + mag * 0.36).toFixed(2)})`,
+      boxShadow: 'inset 0 1px 0 rgba(235,246,224,0.10)',
     };
   };
 
@@ -2039,12 +2044,12 @@ export const ActualVsPredictedScatter: React.FC<{
           y1={toY(0)}
           x2={toX(20)}
           y2={toY(20)}
-          stroke="#FAD9EA"
-          strokeOpacity={0.76}
-          strokeWidth={1.45}
+          stroke="#F5A6CC"
+          strokeOpacity={0.85}
+          strokeWidth={1.6}
           strokeDasharray="4 4"
         />
-        <text x={toX(13.6)} y={toY(16.4)} className="fill-[#FAD9EA] text-[10px] font-medium">
+        <text x={toX(13.6)} y={toY(16.4)} className="fill-[#FAD3E7] text-[10px] font-medium">
           Ideal Fit (y = x)
         </text>
 
@@ -2057,8 +2062,8 @@ export const ActualVsPredictedScatter: React.FC<{
               cx={toX(pt.actual)}
               cy={toY(pt.predicted)}
               r={isHov ? 6.4 : 4.4}
-              fill={closeFit ? '#36492B' : '#212D1B'}
-              stroke={isHov ? '#FFFFFF' : closeFit ? '#FAD9EA' : 'rgba(197, 219, 169, 0.68)'}
+              fill={closeFit ? '#B6638D' : '#35482B'}
+              stroke={isHov ? '#FFFFFF' : closeFit ? '#FFE3F1' : '#C5DBA9'}
               strokeWidth={isHov ? 1.8 : 1.15}
               onMouseEnter={() => setHovered(pt)}
               onMouseLeave={() => setHovered(null)}
@@ -2219,18 +2224,20 @@ export const FeatureImportanceBars: React.FC<{ items: FeatureImportanceItem[] }>
                 {item.percentage.toFixed(1)}%
               </span>
             </div>
-            <div className="h-3.5 w-full rounded-full bg-[#0F160C] border border-[#FAD9EA]/14 p-[1px] overflow-hidden">
+            <div className="h-3.5 w-full rounded-full bg-[#0F160C] border border-[#F5A6CC]/20 p-[1px] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${widthPct}%`,
                   background:
                     idx === 0
-                      ? 'linear-gradient(90deg, #2B3B22 0%, #5B7248 65%, #F8C6DF 100%)'
-                      : 'linear-gradient(90deg, #1E2918 0%, #445A35 100%)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,244,250,0.22)',
-                  border: '1px solid rgba(250, 217, 234, 0.42)',
-                  borderRight: '2px solid #FAD9EA',
+                      ? 'linear-gradient(90deg, #324427 0%, #A95C83 55%, #FAD3E7 100%)'
+                      : idx <= 2
+                      ? 'linear-gradient(90deg, #27361F 0%, #8A506D 68%, #F5A6CC 100%)'
+                      : 'linear-gradient(90deg, #1E2918 0%, #526B3F 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,242,249,0.28)',
+                  border: '1px solid rgba(250, 211, 231, 0.48)',
+                  borderRight: '2px solid #FFE3F1',
                 }}
               />
             </div>
@@ -2242,7 +2249,7 @@ export const FeatureImportanceBars: React.FC<{ items: FeatureImportanceItem[] }>
 };
 
 /**
- * Semi-Circular Smoked-Olive + Soft Light-Pink Grade Gauge
+ * Semi-Circular Smoked-Olive + Blush Rose-Pink Grade Gauge
  */
 export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
   const uid = useId().replace(/:/g, '');
@@ -2259,9 +2266,9 @@ export const GradeGauge: React.FC<{ score: number }> = ({ score }) => {
       <svg width="240" height="136" viewBox="0 0 240 136" className="overflow-visible">
         <defs>
           <linearGradient id={`gauge_${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#35482B" />
-            <stop offset="55%" stopColor="#6E8958" />
-            <stop offset="100%" stopColor="#FAD9EA" />
+            <stop offset="0%" stopColor="#4A633A" />
+            <stop offset="52%" stopColor="#C9739D" />
+            <stop offset="100%" stopColor="#FAD3E7" />
           </linearGradient>
         </defs>
 

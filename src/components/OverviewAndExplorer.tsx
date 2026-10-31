@@ -343,7 +343,11 @@ export const OverviewPage: React.FC<OverviewProps> = ({
         <section className="glass-shell rounded-[24px] px-6 py-5 flex flex-wrap items-center justify-between gap-4 relative overflow-hidden">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-10 -top-10 w-60 h-60 rounded-full bg-[#FAD9EA]/20 blur-3xl"
+            className="pointer-events-none absolute -right-10 -top-10 w-64 h-64 rounded-full bg-[#F5A6CC]/30 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/3 -bottom-14 w-52 h-40 rounded-full bg-[#A4C288]/18 blur-3xl"
           />
           <div className="flex items-center gap-4">
             <div className="w-13 h-13 rounded-2xl pink-icon-badge flex items-center justify-center shrink-0">
@@ -556,14 +560,14 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#FAD9EA]/20">
+                <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#F5A6CC]/28">
                   <button
                     type="button"
                     onClick={() => setPieMode('pie')}
                     className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                       pieMode === 'pie'
-                        ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                        : 'text-[#97A390] hover:text-[#FCF9FB]'
+                        ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                        : 'text-[#9CA696] hover:text-[#FDF8FB]'
                     }`}
                   >
                     Pie
@@ -573,8 +577,8 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                     onClick={() => setPieMode('donut')}
                     className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                       pieMode === 'donut'
-                        ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                        : 'text-[#97A390] hover:text-[#FCF9FB]'
+                        ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                        : 'text-[#9CA696] hover:text-[#FDF8FB]'
                     }`}
                   >
                     Donut
@@ -735,14 +739,14 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   Gender-wise Performance
                 </h2>
               </div>
-              <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#FAD9EA]/20">
+              <div className="flex items-center p-0.5 rounded-full bg-[#11190E] border border-[#F5A6CC]/28">
                 <button
                   type="button"
                   onClick={() => setPieMode('pie')}
                   className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                     pieMode === 'pie'
-                      ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                      : 'text-[#97A390] hover:text-[#FCF9FB]'
+                      ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                      : 'text-[#9CA696] hover:text-[#FDF8FB]'
                   }`}
                 >
                   Pie
@@ -752,8 +756,8 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                   onClick={() => setPieMode('donut')}
                   className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-medium transition-all ${
                     pieMode === 'donut'
-                      ? 'bg-[#2B3B22] text-[#FAD9EA] border border-[#FAD9EA]/45'
-                      : 'text-[#97A390] hover:text-[#FCF9FB]'
+                      ? 'bg-gradient-to-r from-[#F5A6CC]/36 to-[#2B3B22] text-[#FFE8F4] border border-[#FAD3E7]/55'
+                      : 'text-[#9CA696] hover:text-[#FDF8FB]'
                   }`}
                 >
                   Donut
@@ -800,7 +804,11 @@ export const OverviewPage: React.FC<OverviewProps> = ({
         <div className="glass-kpi rounded-[24px] p-6 relative overflow-hidden">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-8 -top-8 w-40 h-40 rounded-full bg-[#FAD9EA]/22 blur-2xl"
+            className="pointer-events-none absolute -right-8 -top-8 w-44 h-44 rounded-full bg-[#F5A6CC]/34 blur-2xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-8 -bottom-8 w-36 h-36 rounded-full bg-[#A4C288]/20 blur-2xl"
           />
           <div className="w-11 h-11 rounded-2xl pink-icon-badge flex items-center justify-center mb-4">
             <Sparkles className="w-5 h-5 text-[#FDF8FC]" />
