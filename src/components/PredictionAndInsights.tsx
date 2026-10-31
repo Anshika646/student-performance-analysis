@@ -425,7 +425,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 </div>
                 <div
                   className={`font-mono font-semibold text-sm ${
-                    prediction.deltaVsCohort >= 0 ? 'text-[#F8C6DF]' : 'text-[#C4A8F5]'
+                    prediction.deltaVsCohort >= 0 ? 'text-[#FAD9EA]' : 'text-[#D6E8BE]'
                   }`}
                 >
                   {prediction.deltaVsCohort >= 0 ? '+' : ''}
@@ -550,10 +550,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                     <div
                       className={`flex items-center gap-0.5 text-xs font-mono tabular-nums font-semibold shrink-0 ${
                         f.impact > 0.05
-                          ? 'text-[#F8C6DF]'
+                          ? 'text-[#FAD9EA]'
                           : f.impact < -0.05
-                          ? 'text-[#C4A8F5]'
-                          : 'text-[#BDB4C3]'
+                          ? 'text-[#D6E8BE]'
+                          : 'text-[#CAD2C4]'
                       }`}
                     >
                       {f.impact > 0.05 && <ArrowUpRight className="w-3.5 h-3.5" />}
@@ -570,8 +570,8 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
             {/* Personalized Academic Improvement Suggestions */}
             <div>
               <div className="flex items-center gap-2 mb-2.5">
-                <Lightbulb className="w-4 h-4 text-[#F5A6CC]" />
-                <h4 className="text-sm font-display font-semibold text-[#FDF8FC]">
+                <Lightbulb className="w-4 h-4 text-[#FAD9EA]" />
+                <h4 className="text-sm font-display font-semibold text-[#FCF9FB]">
                   Personalized Academic Improvement Plan
                 </h4>
               </div>
@@ -579,10 +579,10 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
                 {prediction.suggestions.map((s, idx) => (
                   <div key={idx} className="glass-subcard rounded-2xl p-3.5">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-xs font-semibold text-[#F8C6DF]">{s.title}</span>
-                      <span className="text-[11px] font-mono text-[#C4A8F5]">{s.impact}</span>
+                      <span className="text-xs font-semibold text-[#FAD9EA]">{s.title}</span>
+                      <span className="text-[11px] font-mono text-[#D6E8BE]">{s.impact}</span>
                     </div>
-                    <p className="text-xs text-[#BDB4C3] leading-relaxed">{s.detail}</p>
+                    <p className="text-xs text-[#CAD2C4] leading-relaxed">{s.detail}</p>
                   </div>
                 ))}
               </div>
@@ -688,7 +688,7 @@ export const InsightsPage: React.FC<InsightsProps> = ({
                 Mean error: {activeModel.residualMean} · Std: {activeModel.residualStd}
               </p>
             </div>
-            <span className="text-xs font-mono tabular-nums text-[#C4A8F5]">
+            <span className="text-xs font-mono tabular-nums text-[#D6E8BE]">
               RMSE {activeModel.testMetrics.rmse.toFixed(2)}
             </span>
           </div>
@@ -811,10 +811,10 @@ export const RiskRadarPage: React.FC<{
                   <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#BDB4C3]">
                     {st.G1} → {st.G2}
                   </td>
-                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right font-semibold text-[#C4A8F5]">
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right font-semibold text-[#D6E8BE]">
                     {st.predictedG3.toFixed(2)} / 20
                   </td>
-                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#F8C6DF]">
+                  <td className="py-2.5 px-3.5 font-mono tabular-nums text-right text-[#FAD9EA]">
                     +{st.gapToPass.toFixed(2)} pts
                   </td>
                   <td className="py-2.5 px-3.5 text-right">
@@ -858,7 +858,7 @@ export const PythonSourceModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#0B1009]/78 backdrop-blur-md flex items-center justify-center p-4">
       <div className="w-full max-w-5xl rounded-[24px] glass-shell text-[#FDF8FC] overflow-hidden flex flex-col max-h-[86vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.10]">
           <div className="flex items-center gap-3">

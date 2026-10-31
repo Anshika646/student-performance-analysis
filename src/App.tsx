@@ -363,8 +363,8 @@ export default function App() {
                 <span
                   className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
                     isActive
-                      ? 'bg-gradient-to-br from-[#F8C6DF] to-[#E88DBB] text-[#19121D] shadow-[0_0_14px_rgba(245,166,204,0.55)]'
-                      : 'text-[#BDB4C3]'
+                      ? 'bg-gradient-to-br from-[#FCE2EF] to-[#F5A6CC] text-[#162013] shadow-[0_0_16px_rgba(248,198,223,0.60)]'
+                      : 'text-[#CAD2C4]'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -376,46 +376,50 @@ export default function App() {
         </nav>
       </div>
 
-      {/* Bottom Frosted Glass Quote Card */}
+      {/* Bottom Frosted Olive-Pink Glass Quote Card */}
       <div className="mt-6 glass-subcard rounded-[20px] p-4 flex items-center gap-3.5">
         <span
           aria-hidden="true"
-          className="w-1 h-11 rounded-full bg-gradient-to-b from-[#F8C6DF] via-[#F5A6CC] to-[#C4A8F5] shadow-[0_0_12px_rgba(245,166,204,0.85)] shrink-0"
+          className="w-1 h-11 rounded-full bg-gradient-to-b from-[#FAD9EA] via-[#F8C6DF] to-[#A4C288] shadow-[0_0_12px_rgba(248,198,223,0.80)] shrink-0"
         />
-        <p className="text-[11.5px] leading-relaxed text-[#BDB4C3] font-medium">
-          <span className="block text-[#FDF8FC]">Better data.</span>
+        <p className="text-[11.5px] leading-relaxed text-[#CAD2C4] font-medium">
+          <span className="block text-[#FCF9FB]">Better data.</span>
           <span className="block">Better decisions.</span>
-          <span className="block text-[#F8C6DF]">Brighter futures.</span>
+          <span className="block text-[#FAD9EA]">Brighter futures.</span>
         </p>
       </div>
     </div>
   );
 
   return (
-    <div className="relative min-h-screen text-[#FDF8FC] selection:bg-[#F5A6CC]/30">
+    <div className="relative min-h-screen text-[#FCF9FB] selection:bg-[#F8C6DF]/30">
       {/* =====================================================================
-          CINEMATIC AMBIENT BABY-PINK & LAVENDER GLASS BACKDROP
-          Visible behind all blur(22px) smoked-glass panels
+          CINEMATIC OLIVE-GREEN + SOFT LIGHT-PINK AMBIENT GLASS BACKDROP
+          Visible behind all blur(24px) smoked olive-glass panels
           ===================================================================== */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
-        {/* Subtle edge refraction orbs keeping the canvas deep obsidian black */}
-        <div className="absolute -top-28 left-[36%] w-[440px] h-[440px] rounded-full bg-gradient-to-br from-[#F8C6DF]/[0.07] via-[#E88DBB]/[0.04] to-transparent blur-[110px]" />
-        <div className="absolute bottom-[-90px] -left-20 w-[380px] h-[380px] rounded-full bg-gradient-to-tr from-[#F5A6CC]/[0.08] via-[#E88DBB]/[0.04] to-transparent blur-[105px]" />
-        <div className="absolute top-[22%] -right-24 w-[390px] h-[390px] rounded-full bg-gradient-to-bl from-[#C4A8F5]/[0.06] via-[#F5A6CC]/[0.04] to-transparent blur-[115px]" />
-        {/* Subtle abstract translucent glass curves */}
+        {/* Top-center luminous soft light-pink beam */}
+        <div className="absolute -top-24 left-[34%] w-[480px] h-[480px] rounded-full bg-gradient-to-br from-[#FAD9EA]/26 via-[#F8C6DF]/14 to-transparent blur-[105px]" />
+        {/* Bottom-left rose-petal light behind olive sidebar */}
+        <div className="absolute bottom-[-85px] -left-16 w-[410px] h-[410px] rounded-full bg-gradient-to-tr from-[#F8C6DF]/24 via-[#A4C288]/14 to-transparent blur-[95px]" />
+        {/* Right-rail olive-sage & soft pink glass refraction */}
+        <div className="absolute top-[20%] -right-20 w-[430px] h-[430px] rounded-full bg-gradient-to-bl from-[#FAD9EA]/22 via-[#8CAA70]/16 to-transparent blur-[105px]" />
+        {/* Center-bottom warm moss glow */}
+        <div className="absolute bottom-[10%] left-[44%] w-[440px] h-[340px] rounded-full bg-gradient-to-t from-[#6E8B54]/18 via-[#F8C6DF]/08 to-transparent blur-[110px]" />
+        {/* Subtle abstract translucent pink & sage glass curves */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-20"
+          className="absolute inset-0 w-full h-full opacity-35"
           viewBox="0 0 1440 900"
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="bg_curve_pink" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#F8C6DF" stopOpacity="0.22" />
-              <stop offset="50%" stopColor="#C4A8F5" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#E88DBB" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#FAD9EA" stopOpacity="0.34" />
+              <stop offset="50%" stopColor="#B8D29B" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#F8C6DF" stopOpacity="0.0" />
             </linearGradient>
           </defs>
           <path
@@ -446,7 +450,7 @@ export default function App() {
         {mobileNavOpen && (
           <div className="fixed inset-0 z-50 lg:hidden flex">
             <div
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 bg-[#0B1009]/75 backdrop-blur-sm"
               onClick={() => setMobileNavOpen(false)}
             />
             <aside className="relative z-10 w-[270px] max-w-[82vw] h-full glass-sidebar rounded-r-[26px] overflow-y-auto">
