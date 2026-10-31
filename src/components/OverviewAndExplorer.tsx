@@ -133,29 +133,29 @@ export const OverviewPage: React.FC<OverviewProps> = ({
     };
   }, [activeRows, dataset.datasetKey]);
 
-  // Cohort-relative distributions & trends for the 4 Recharts KPI Sparklines
+  // Cohort trend trajectories for the 4 responsive 'pink-primary' Recharts KPI Sparklines
   const kpiSparkData = useMemo(() => {
     const total = activeRows.length || 1;
 
-    // 1. Total Students: Relative cohort distribution across student age brackets
-    const ageBuckets = [
-      { label: 'Age 15', match: (a: number) => a <= 15 },
-      { label: 'Age 16', match: (a: number) => a === 16 },
-      { label: 'Age 17', match: (a: number) => a === 17 },
-      { label: 'Age 18', match: (a: number) => a === 18 },
-      { label: 'Age 19+', match: (a: number) => a >= 19 },
+    // 1. Total Students: Cumulative enrollment trajectory across sequential cohort ages (15 -> 19+)
+    const ageSteps = [
+      { label: '≤15 yrs', match: (a: number) => a <= 15 },
+      { label: '≤16 yrs', match: (a: number) => a <= 16 },
+      { label: '≤17 yrs', match: (a: number) => a <= 17 },
+      { label: '≤18 yrs', match: (a: number) => a <= 18 },
+      { label: 'All Ages', match: () => true },
     ];
-    const studentsByAge: KpiSparkPoint[] = ageBuckets.map((b) => {
-      const cnt = activeRows.filter((r) => b.match(Number(r.age ?? 16))).length;
+    const studentsTrajectory: KpiSparkPoint[] = ageSteps.map((st) => {
+      const cnt = activeRows.filter((r) => st.match(Number(r.age ?? 16))).length;
       const pct = Math.round((cnt * 100) / total);
       return {
-        label: b.label,
+        label: st.label,
         value: cnt,
         formatted: `${cnt} (${pct}%)`,
       };
     });
 
-    // 2. Average Final Grade: Mean grade trend across study-hour tiers (fallback: G1 -> G2 -> G3 progression)
+    // 2. Average Final Grade: Mean grade trajectory across study-hour tiers (fallback: G1 -> G2 -> G3)
     const populatedStudy = analytics.studyVsGrade.filter((s) => s.count > 0);
     let avgGradeTrend: KpiSparkPoint[];
     if (populatedStudy.length >= 3) {
@@ -179,13 +179,13 @@ export const OverviewPage: React.FC<OverviewProps> = ({
       ];
     }
 
-    // 3. Pass Percentage: Cohort pass-rate (%) trend across absence brackets
+    // 3. Pass Percentage: Pass-rate trajectory ordered from high absences -> zero absences
     const absDefs = [
-      { label: '0 Abs', min: 0, max: 0 },
-      { label: '1–3 Abs', min: 1, max: 3 },
-      { label: '4–7 Abs', min: 4, max: 7 },
-      { label: '8–14 Abs', min: 8, max: 14 },
       { label: '15+ Abs', min: 15, max: 999 },
+      { label: '8–14 Abs', min: 8, max: 14 },
+      { label: '4–7 Abs', min: 4, max: 7 },
+      { label: '1–3 Abs', min: 1, max: 3 },
+      { label: '0 Abs', min: 0, max: 0 },
     ];
     const passRateTrend: KpiSparkPoint[] = [];
     for (const ab of absDefs) {
@@ -203,7 +203,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
       });
     }
 
-    // 4. Highest Grade: Cohort G3 percentile curve culminating at Max (Highest Grade)
+    // 4. Highest Grade: Cohort G3 percentile trajectory culminating at Max (Highest Grade)
     const sortedG3 = activeRows
       .map((r) => Number(r.G3 ?? 0))
       .sort((a, b) => a - b);
@@ -230,7 +230,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
     });
 
     return {
-      studentsByAge,
+      studentsTrajectory,
       avgGradeTrend,
       passRateTrend:
         passRateTrend.length >= 2
@@ -397,7 +397,7 @@ export const OverviewPage: React.FC<OverviewProps> = ({
           </div>
         </section>
 
-        {/* 2. Four Premium Smoked-Glass KPI Cards with Recharts Cohort Sparklines */}
+        {/* 2. Four Premium Smoked-Glass KPI Cards with Responsive 'pink-primary' Recharts Sparklines */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* KPI 1: Total Students */}
           <div className="glass-kpi rounded-[22px] p-5 flex flex-col justify-between">
@@ -410,9 +410,9 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                 {analytics.totalStudents}
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between gap-2">
-              <div>
-                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="shrink-0">
+                <div className="text-[11px] font-mono font-medium text-pink-primary flex items-center gap-0.5 tabular-nums">
                   <ArrowUpRight className="w-3 h-3" />
                   <span>
                     {dataset.rowCount > 0
@@ -420,13 +420,12 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                       : '100%'}
                   </span>
                 </div>
-                <div className="text-[10.5px] text-[#928997]">Age distribution</div>
+                <div className="text-[10.5px] text-[#928997]">Cohort trajectory</div>
               </div>
               <RoseSparkline
                 id="kpi_total_students"
-                variant="bar"
-                accent="pink"
-                data={kpiSparkData.studentsByAge}
+                variant="area"
+                data={kpiSparkData.studentsTrajectory}
               />
             </div>
           </div>
@@ -445,9 +444,9 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                 <span className="text-sm font-mono text-[#BDB4C3]">/ 20</span>
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between gap-2">
-              <div>
-                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="shrink-0">
+                <div className="text-[11px] font-mono font-medium text-pink-primary flex items-center gap-0.5 tabular-nums">
                   <ArrowUpRight className="w-3 h-3" />
                   <span>Med {analytics.medianG3}</span>
                 </div>
@@ -456,7 +455,6 @@ export const OverviewPage: React.FC<OverviewProps> = ({
               <RoseSparkline
                 id="kpi_avg_grade"
                 variant="area"
-                accent="blush"
                 data={kpiSparkData.avgGradeTrend}
               />
             </div>
@@ -473,12 +471,12 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                 <span className="text-3xl font-display font-bold text-[#FDF8FC] tabular-nums">
                   {analytics.passRate.toFixed(1)}
                 </span>
-                <span className="text-lg font-display font-semibold text-[#F8C6DF]">%</span>
+                <span className="text-lg font-display font-semibold text-pink-primary">%</span>
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between gap-2">
-              <div>
-                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] flex items-center gap-0.5 tabular-nums">
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="shrink-0">
+                <div className="text-[11px] font-mono font-medium text-pink-primary flex items-center gap-0.5 tabular-nums">
                   <ArrowUpRight className="w-3 h-3" />
                   <span>{Math.round((analytics.passRate * analytics.totalStudents) / 100)} pass</span>
                 </div>
@@ -487,7 +485,6 @@ export const OverviewPage: React.FC<OverviewProps> = ({
               <RoseSparkline
                 id="kpi_pass_pct"
                 variant="area"
-                accent="lavender"
                 data={kpiSparkData.passRateTrend}
               />
             </div>
@@ -504,17 +501,16 @@ export const OverviewPage: React.FC<OverviewProps> = ({
                 {analytics.highestG3}
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between gap-2">
-              <div>
-                <div className="text-[11px] font-mono font-medium text-[#F8C6DF] tabular-nums">
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <div className="shrink-0">
+                <div className="text-[11px] font-mono font-medium text-pink-primary tabular-nums">
                   P90 {kpiSparkData.highestQuantileCurve[4]?.value ?? analytics.highestG3} / 20
                 </div>
-                <div className="text-[10.5px] text-[#928997]">Cohort percentiles</div>
+                <div className="text-[10.5px] text-[#928997]">Percentile trend</div>
               </div>
               <RoseSparkline
                 id="kpi_highest_grade"
                 variant="area"
-                accent="pink"
                 data={kpiSparkData.highestQuantileCurve}
               />
             </div>

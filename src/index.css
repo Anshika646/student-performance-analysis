@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --color-pink-primary: #f5a6cc;
+  --color-pink-baby: #f8c6df;
+  --color-pink-blush: #e88dbb;
+  --color-lavender-light: #c4a8f5;
+}
+
 @layer base {
   :root {
     --font-display: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;

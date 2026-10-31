@@ -217,28 +217,19 @@ export interface KpiSparkPoint {
 }
 
 /**
- * Stylized Obsidian-Glass KPI Sparkline powered by Recharts
- * Supports smooth monotone Area trend curves and sculpted Cohort Distribution Bars.
+ * Responsive Obsidian-Glass KPI Sparkline powered by Recharts
+ * Uses 'pink-primary' (var(--pink-primary) / #F5A6CC) to visualize cohort trend trajectories.
  */
 export const RoseSparkline: React.FC<{
   id: string;
   data?: KpiSparkPoint[];
   values?: number[];
   variant?: 'area' | 'bar';
-  accent?: 'pink' | 'blush' | 'lavender';
-  width?: number;
-  height?: number;
-}> = ({
-  id,
-  data,
-  values,
-  variant = 'area',
-  accent = 'pink',
-  width = 114,
-  height = 42,
-}) => {
+}> = ({ id, data, values, variant = 'area' }) => {
   const uid = useId().replace(/:/g, '');
   const gradId = `recharts_spark_${id}_${uid}`;
+  const glowId = `recharts_glow_${id}_${uid}`;
+  const pinkPrimary = 'var(--pink-primary, #F5A6CC)';
 
   const chartData: KpiSparkPoint[] = useMemo(() => {
     if (data && data.length >= 2) {
@@ -263,13 +254,12 @@ export const RoseSparkline: React.FC<{
     }
     return {
       domainMin: variant === 'bar' ? 0 : Math.max(0, min - span * 0.25),
-      domainMax: max + span * 0.18,
+      domainMax: max + span * 0.2,
       peakIdx: bestIdx,
     };
   }, [chartData, variant]);
 
-  const strokeColor =
-    accent === 'lavender' ? '#C4A8F5' : accent === 'blush' ? '#F8C6DF' : '#F5A6CC';
+  const lastIdx = chartData.length - 1;
 
   const renderTooltip = ({
     active,
@@ -284,35 +274,52 @@ export const RoseSparkline: React.FC<{
     return (
       <div className="glass-tooltip px-2.5 py-1 rounded-lg text-[10px] leading-tight font-mono tabular-nums whitespace-nowrap pointer-events-none">
         <span className="text-[#BDB4C3]">{pt.label}: </span>
-        <span className="font-semibold text-[#F8C6DF]">
+        <span className="font-semibold text-pink-primary">
           {pt.formatted ?? pt.value}
         </span>
       </div>
     );
   };
 
+  const renderTerminalDot = (props: any) => {
+    const { cx, cy, index } = props;
+    if (index !== lastIdx || typeof cx !== 'number' || typeof cy !== 'number') {
+      return <g key={`dot_empty_${index}`} />;
+    }
+    return (
+      <g key={`dot_end_${index}`}>
+        <circle cx={cx} cy={cy} r={4.2} fill="#F5A6CC" fillOpacity={0.28} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={2.3}
+          fill="#FDF8FC"
+          stroke={pinkPrimary}
+          strokeWidth={1.4}
+        />
+      </g>
+    );
+  };
+
   return (
-    <div
-      style={{ width, height }}
-      className="shrink-0 rounded-xl bg-[#050408]/90 border border-white/[0.06] px-1.5 py-1 shadow-[inset_0_1px_8px_rgba(0,0,0,0.75)]"
-    >
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full min-w-[88px] max-w-[136px] h-11 flex-1 rounded-xl bg-[#050408]/90 border border-pink-primary/15 px-1.5 py-1 shadow-[inset_0_1px_8px_rgba(0,0,0,0.75)]">
+      <ResponsiveContainer width="100%" height="100%" minWidth={80}>
         {variant === 'bar' ? (
-          <BarChart data={chartData} margin={{ top: 3, right: 2, bottom: 1, left: 2 }} barCategoryGap="22%">
+          <BarChart data={chartData} margin={{ top: 3, right: 3, bottom: 1, left: 3 }} barCategoryGap="22%">
             <defs>
               <linearGradient id={`${gradId}_bar`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3B2B39" stopOpacity={0.98} />
                 <stop offset="100%" stopColor="#0D0A12" stopOpacity={0.95} />
               </linearGradient>
               <linearGradient id={`${gradId}_bar_peak`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.85} />
+                <stop offset="0%" stopColor="#F5A6CC" stopOpacity={0.88} />
                 <stop offset="100%" stopColor="#1D1522" stopOpacity={0.95} />
               </linearGradient>
             </defs>
             <YAxis hide domain={[domainMin, domainMax]} />
             <RechartsTooltip
               content={renderTooltip}
-              cursor={{ fill: 'rgba(248, 198, 223, 0.06)' }}
+              cursor={{ fill: 'rgba(245, 166, 204, 0.08)' }}
               position={{ y: -32 }}
               allowEscapeViewBox={{ x: true, y: true }}
             />
@@ -321,7 +328,7 @@ export const RoseSparkline: React.FC<{
                 <Cell
                   key={`${entry.label}_${idx}`}
                   fill={idx === peakIdx ? `url(#${gradId}_bar_peak)` : `url(#${gradId}_bar)`}
-                  stroke={idx === peakIdx ? '#FDF8FC' : strokeColor}
+                  stroke={idx === peakIdx ? '#FDF8FC' : pinkPrimary}
                   strokeOpacity={idx === peakIdx ? 0.85 : 0.45}
                   strokeWidth={0.9}
                 />
@@ -329,34 +336,42 @@ export const RoseSparkline: React.FC<{
             </Bar>
           </BarChart>
         ) : (
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 2, left: 4 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 2, left: 3 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={strokeColor} stopOpacity={0.34} />
-                <stop offset="65%" stopColor="#1B1420" stopOpacity={0.14} />
+                <stop offset="0%" stopColor="#F5A6CC" stopOpacity={0.38} />
+                <stop offset="65%" stopColor="#F5A6CC" stopOpacity={0.09} />
                 <stop offset="100%" stopColor="#050408" stopOpacity={0.0} />
               </linearGradient>
+              <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="1.6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
             <YAxis hide domain={[domainMin, domainMax]} />
             <RechartsTooltip
               content={renderTooltip}
-              cursor={{ stroke: 'rgba(248, 198, 223, 0.28)', strokeWidth: 1, strokeDasharray: '2 2' }}
+              cursor={{ stroke: 'rgba(245, 166, 204, 0.35)', strokeWidth: 1, strokeDasharray: '2 2' }}
               position={{ y: -32 }}
               allowEscapeViewBox={{ x: true, y: true }}
             />
             <Area
               type="monotone"
               dataKey="value"
-              stroke={strokeColor}
-              strokeWidth={1.85}
+              stroke={pinkPrimary}
+              strokeWidth={1.9}
               fill={`url(#${gradId})`}
+              filter={`url(#${glowId})`}
               isAnimationActive={false}
-              dot={false}
+              dot={renderTerminalDot}
               activeDot={{
-                r: 3.2,
+                r: 3.4,
                 fill: '#FDF8FC',
-                stroke: strokeColor,
-                strokeWidth: 1.6,
+                stroke: pinkPrimary,
+                strokeWidth: 1.7,
               }}
             />
           </AreaChart>
