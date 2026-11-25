@@ -1,204 +1,131 @@
-export type PageId =
+export type TabId =
   | 'overview'
-  | 'explorer'
-  | 'eda'
-  | 'training'
-  | 'prediction'
-  | 'insights'
-  | 'risk';
+  | 'analysis'
+  | 'visualizations'
+  | 'prediction';
 
-export type ModelKey =
-  | 'random_forest'
-  | 'gradient_boosting'
-  | 'linear_regression'
-  | 'decision_tree';
+export type PerformanceCategory =
+  | 'Excellent'
+  | 'Good'
+  | 'Average'
+  | 'Needs Support';
 
-export interface ColumnStat {
+export interface StudentRecord {
+  studentId: string;
+  gender: 'Female' | 'Male';
+  studyHours: number;
+  attendancePercentage: number;
+  assignmentScore: number;
+  previousExamScore: number;
+  finalExamScore: number;
+  performanceCategory: PerformanceCategory;
+}
+
+export interface MissingColumnCount {
   column: string;
-  dtype: string;
-  missing: number;
+  missingCount: number;
+}
+
+export interface CategoryAverageItem {
+  category: PerformanceCategory;
   count: number;
-  mean?: number;
-  std?: number;
-  min?: number;
-  q25?: number;
-  median?: number;
-  q75?: number;
-  max?: number;
-  unique?: number;
-  top?: string;
-  freq?: number;
+  avgFinalScore: number;
+  avgStudyHours: number;
+  avgAttendance: number;
+  avgAssignment: number;
 }
 
-export interface DatasetPayload {
-  datasetLabel: string;
-  datasetKey: 'mat' | 'por' | 'custom';
-  delimiter: string;
-  initialRows: number;
-  rowCount: number;
-  columnCount: number;
-  duplicatesRemoved: number;
-  totalMissingImputed: number;
-  columns: string[];
-  columnTypes: Record<string, string>;
-  missingByColumn: Record<string, number>;
-  columnStats: ColumnStat[];
-  correlationColumns: string[];
-  correlationMatrix: number[][];
-  rows: Record<string, any>[];
+export interface GenderAverageItem {
+  gender: string;
+  count: number;
+  avgFinalScore: number;
+  avgAttendance: number;
+  avgStudyHours: number;
 }
 
-export interface RegressionMetrics {
-  r2: number;
-  mae: number;
-  rmse: number;
-}
-
-export interface ScatterPoint {
-  id: number;
-  actual: number;
-  predicted: number;
-  residual: number;
-  age: number | string;
-  sex: string;
-  studytime: number | string;
-  absences: number | string;
-}
-
-export interface ResidualBin {
-  binLabel: string;
-  binCenter: number;
+export interface HistogramBin {
   range: string;
+  midpoint: number;
   count: number;
 }
 
-export interface FeatureImportanceItem {
-  feature: string;
-  label: string;
-  importance: number;
-  percentage: number;
+export interface BoxPlotStat {
+  category: PerformanceCategory;
+  count: number;
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
 }
 
-export interface ModelReport {
-  key: ModelKey;
-  name: string;
-  testMetrics: RegressionMetrics;
-  trainMetrics: RegressionMetrics;
-  cvMetrics: {
-    meanR2: number;
-    stdR2: number;
+export interface LinearRegressionSummary {
+  isTrained: boolean;
+  errorMessage?: string;
+  trainCount: number;
+  testCount: number;
+  mae: number;
+  r2: number;
+  intercept: number;
+  coefficients: {
+    feature: string;
+    weight: number;
+  }[];
+}
+
+export interface DashboardPayload {
+  isSyntheticData: boolean;
+  overview: {
+    totalStudents: number;
+    avgFinalScore: number;
+    avgAttendance: number;
+    avgStudyHours: number;
   };
-  actualVsPredicted: ScatterPoint[];
-  residualHistogram: ResidualBin[];
-  residualMean: number;
-  residualStd: number;
-  featureImportance: FeatureImportanceItem[];
-}
-
-export interface AtRiskStudent {
-  rowNumber: number;
-  school: string;
-  sex: 'F' | 'M';
-  age: number;
-  studytime: number;
-  failures: number;
-  absences: number;
-  Medu: number;
-  Fedu: number;
-  internet: 'yes' | 'no';
-  schoolsup: 'yes' | 'no';
-  G1: number;
-  G2: number;
-  actualG3: number;
-  predictedG3: number;
-  gapToPass: number;
-}
-
-export interface EvaluationPayload {
-  includeGrades: boolean;
-  modeLabel: string;
-  features: { key: string; label: string }[];
-  trainSize: number;
-  testSize: number;
-  testSplitRatio: number;
-  randomState: number;
-  maxDepth: number;
-  nEstimators: number;
-  engineBackend: string;
-  bestModelKey: ModelKey;
-  bestModelName: string;
-  bestModelExplanation: string;
-  atRiskCount: number;
-  atRiskSample: AtRiskStudent[];
-  models: Record<ModelKey, ModelReport>;
-}
-
-export interface StudentInputProfile {
-  age: number;
-  sex: 'F' | 'M';
-  studytime: number;
-  absences: number;
-  failures: number;
-  Medu: number;
-  Fedu: number;
-  internet: 'yes' | 'no';
-  schoolsup: 'yes' | 'no';
-  G1: number;
-  G2: number;
-}
-
-export interface InfluencingFactor {
-  feature: string;
-  label: string;
-  studentValue: string | number;
-  cohortMean: number;
-  impact: number;
-  direction: 'positive' | 'negative' | 'neutral';
-  importance: number;
-}
-
-export interface ImprovementSuggestion {
-  title: string;
-  impact: string;
-  detail: string;
-}
-
-export interface WhatIfPoint {
-  label: string;
-  value: number;
-  active?: boolean;
-}
-
-export interface PredictionPayload {
-  selectedModelKey: ModelKey;
-  selectedModelName: string;
-  predictedGrade: number;
-  outOf: number;
-  percentage: number;
-  cohortAverage: number;
-  deltaVsCohort: number;
-  classification: {
-    category: string;
-    tier: string;
-    status: string;
-    summary: string;
+  cleaning: {
+    rawRowCount: number;
+    duplicatesRemoved: number;
+    totalMissingFound: number;
+    totalMissingAfter: number;
+    cleanRowCount: number;
+    missingByColumn: MissingColumnCount[];
   };
-  allModelPredictions: Record<ModelKey, number>;
-  influencingFactors: InfluencingFactor[];
-  whatIfStudy: WhatIfPoint[];
-  whatIfAbsences: WhatIfPoint[];
-  suggestions: ImprovementSuggestion[];
+  analysis: {
+    minScore: number;
+    maxScore: number;
+    avgScore: number;
+    highAttendanceAvg: number;
+    lowAttendanceAvg: number;
+    highStudyAvg: number;
+    lowStudyAvg: number;
+    categoryBreakdown: CategoryAverageItem[];
+    genderComparison: GenderAverageItem[];
+    supportNeededCount: number;
+    supportNeededStudents: StudentRecord[];
+  };
+  charts: {
+    categoryBar: CategoryAverageItem[];
+    scoreHistogram: HistogramBin[];
+    scatterPoints: {
+      studentId: string;
+      studyHours: number;
+      finalExamScore: number;
+      category: PerformanceCategory;
+    }[];
+    boxPlotStats: BoxPlotStat[];
+    correlationColumns: string[];
+    correlationMatrix: number[][];
+  };
+  mlModel: LinearRegressionSummary;
+  sampleRows: StudentRecord[];
 }
 
-export interface CohortFilters {
-  school: string;
-  sex: string;
-  minAge: number;
-  maxAge: number;
-  studytime: number | 'all';
+export interface PredictionResult {
+  predictedScore: number;
+  predictedCategory: PerformanceCategory;
 }
 
-export interface PythonSourceFile {
+export interface ProjectFileItem {
   name: string;
+  description: string;
   content: string;
 }

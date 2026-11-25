@@ -1,33 +1,53 @@
-# EduPulse — Student Performance Prediction & Analytics System
+# Student Performance Analysis Dashboard
 
-End-to-end **Machine Learning & Data Analytics System** built on the official **UCI Student Performance Dataset** (`student-mat.csv` and `student-por.csv`).
+A beginner-friendly Data Analysis and Machine Learning project built with **Python**, **Pandas**, **NumPy**, **Matplotlib**, **Seaborn**, **Scikit-learn**, and **Streamlit**.
 
-## Architecture & Module Structure
+> **Dataset Notice:** The file `data/student_performance.csv` contains **synthetic sample data** (600 cleaned student records after removing duplicates and filling missing values) created for learning and portfolio demonstration. It does **not** contain real student records.
 
-- **`data_loader.py`** — Loads UCI Mathematics (`student-mat.csv`, 395 students) and Portuguese (`student-por.csv`, 649 students) datasets or custom uploaded CSVs, auto-detects `;` vs `,` delimiters, removes exact duplicate records, imputes missing values, infers column data types, and computes descriptive statistics and Pearson correlation matrices.
-- **`preprocessing.py`** — Leakage-free train/test split and preprocessing pipeline (`StudentPreprocessor`). Fits imputation medians/modes and `StandardScaler` parameters strictly on `X_train` after partitioning to eliminate test-set data leakage. Supports two prediction modes:
-  1. **With G1 & G2**: Full academic trajectory including first and second period grades.
-  2. **Without G1 & G2**: Early-warning prediction using demographics, family education, support, and study habits only.
-- **`model_training.py`** — Trains and evaluates **Linear Regression**, **Random Forest Regressor**, and **Decision Tree Regressor** on unseen test data (`R² Score`, `MAE`, `RMSE`, Actual vs. Predicted scatter, Residual histogram, and Feature Importance).
-- **`prediction.py`** — Runs live inference on student profiles, computes per-feature marginal contributions relative to the training cohort average, classifies academic standing, and synthesizes personalized improvement recommendations.
-- **`visualization.py`** — Computes cohort EDA distributions and provides glassmorphism Plotly & Seaborn chart builders.
-- **`app.py`** — Standalone Streamlit dashboard (`streamlit run app.py`).
-- **`server.ts` + `src/`** — Full-stack interactive web dashboard executing the Python ML modules live via `/api/*`.
+---
 
-## Dataset Source
+## Project Structure
 
- Cortez, P. (2008). *Student Performance* [Dataset]. UCI Machine Learning Repository. https://archive.ics.uci.edu/dataset/320/student+performance
+- `app.py` — Main Streamlit dashboard with data cleaning, analysis, Matplotlib/Seaborn charts, and Linear Regression prediction.
+- `data/student_performance.csv` — Synthetic student performance dataset (`Student ID`, `Gender`, `Study Hours`, `Attendance Percentage`, `Assignment Score`, `Previous Exam Score`, `Final Exam Score`, `Performance Category`).
+- `requirements.txt` — Basic Python libraries needed to run the project.
+- `README.md` — Project documentation, VS Code instructions, and interview preparation guide.
 
-## Running Locally
+---
 
-### Option A: Interactive Web Application (Express + Python ML Engine + React)
-```bash
-npm install
-npm run dev
-```
+## How to Run in VS Code
 
-### Option B: Standalone Python Streamlit Dashboard
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+1. **Open the project folder** in VS Code (`File` → `Open Folder...`).
+2. **Open the integrated terminal** (`Ctrl + ~` on Windows/Linux or `Cmd + ~` on Mac).
+3. **(Recommended) Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   # Windows:
+   venv\Scripts\activate
+   # Mac/Linux:
+   source venv/bin/activate
+   ```
+4. **Install required libraries:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. **Run the Streamlit dashboard:**
+   ```bash
+   streamlit run app.py
+   ```
+6. Your browser will open automatically at `http://localhost:8501`.
+
+---
+
+## Libraries & ML Concepts Explained Simply
+
+- **Pandas (`pd`)**: Loads the CSV file into a table (DataFrame), checks missing values (`isnull().sum()`), checks duplicates (`duplicated().sum()`), removes duplicates (`drop_duplicates()`), and calculates group averages.
+- **NumPy (`np`)**: Quickly computes summary numbers like mean (`np.mean`), minimum (`np.min`), and maximum (`np.max`).
+- **Matplotlib (`plt`)**: The base Python plotting library used to create figure canvases, titles, and axis labels.
+- **Seaborn (`sns`)**: Built on top of Matplotlib to make statistical charts (bar charts, histograms, scatter plots, box plots, and correlation heatmaps) cleaner and easier to read.
+- **Scikit-learn (`sklearn`)**:
+  - **Train-Test Split (`train_test_split`)**: Splits the data into 80% training data (to teach the model) and 20% testing data (to check how accurately it predicts unseen students).
+  - **Linear Regression (`LinearRegression`)**: Finds the best straight-line relationship between input features (`Study Hours`, `Attendance Percentage`, `Assignment Score`, `Previous Exam Score`) and the target (`Final Exam Score`).
+  - **MAE (Mean Absolute Error)**: The average difference (in marks) between the predicted score and the actual score. Lower is better.
+  - **R² Score**: Measures how much of the variation in final exam scores is explained by the model (from `0` to `1`; closer to `1` is better).
+- **Streamlit (`st`)**: Turns a plain Python script into an interactive web dashboard without needing HTML, CSS, or backend APIs.
